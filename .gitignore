@@ -1,0 +1,8 @@
+.*
+build
+include
+lib
+pebble_app.ld
+tools
+waf
+wscript
