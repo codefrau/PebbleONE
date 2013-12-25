@@ -1,0 +1,33 @@
+{
+  "uuid": "f6c1ad30-2e14-427a-b959-9442f3a46949",
+  "shortName": "Bert ONE",
+  "longName": "Bert ONE",
+  "companyName": "Bert Freudenberg",
+  "versionCode": 2,
+  "versionLabel": "2.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {},
+  "resources": {
+    "media": [
+      {
+        "menuIcon": true,
+        "type": "png",
+        "name": "IMAGE_MENU_ICON",
+        "file": "images/menu_icon_bert_one.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_LOGO",
+        "file": "images/logo.png"
+      },
+      {
+        "type": "font",
+        "name": "FONT_30",
+        "file": "fonts/VarelaRound-Regular.ttf",
+         "characterRegex":"[0-9A-Za-z]"
+      }
+    ]
+  }
+}
