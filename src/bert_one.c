@@ -24,20 +24,24 @@
 #define MIN_RADIUS  60
 #define SEC_RADIUS  62
 
-Window *window;
-Layer *background_layer;
-Layer *hands_layer;
-Layer *date_layer;
-struct tm *now = NULL;
+static Window *window;
+static Layer *background_layer;
+static Layer *hands_layer;
+static Layer *date_layer;
 
-GFont *font;
+static GBitmap *logo;
+static BitmapLayer *logo_layer;
+
+static struct tm *now = NULL;
+
+static GFont *font;
 #define DATE_BUFFER_BYTES 32
-char date_buffer[DATE_BUFFER_BYTES];
+static char date_buffer[DATE_BUFFER_BYTES];
 
 #if DEBUG
-TextLayer *debug_layer;
+static TextLayer *debug_layer;
 #define DEBUG_BUFFER_BYTES 32
-char debug_buffer[DEBUG_BUFFER_BYTES];
+static char debug_buffer[DEBUG_BUFFER_BYTES];
 #endif
 
 const GPathInfo HOUR_POINTS = {
@@ -51,7 +55,7 @@ const GPathInfo HOUR_POINTS = {
     { 6,  0},
   }
 };
-GPath *hour_path;
+static GPath *hour_path;
 
 const GPathInfo MIN_POINTS = {
   6,
@@ -64,7 +68,7 @@ const GPathInfo MIN_POINTS = {
     { 5,  0},
   }
 };
-GPath *min_path;
+static GPath *min_path;
 
 #if SECONDS
 const GPathInfo SEC_POINTS = {
@@ -76,7 +80,7 @@ const GPathInfo SEC_POINTS = {
     {-2,  0},
   }
 };
-GPath *sec_path;
+static GPath *sec_path;
 #endif
 
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
@@ -187,6 +191,18 @@ void handle_init() {
   layer_set_update_proc(background_layer, &background_layer_update_callback);
   layer_add_child(window_get_root_layer(window), background_layer);
 
+  logo = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);  
+  GRect frame = (GRect) {
+    .origin = (GPoint) {
+      .x = LOGO_X - logo->bounds.size.w / 2,
+      .y =  LOGO_Y - logo->bounds.size.h / 2
+    },
+    .size = logo->bounds.size
+  };
+  logo_layer = bitmap_layer_create(frame);
+  bitmap_layer_set_bitmap	(logo_layer, logo);
+  layer_add_child(background_layer, bitmap_layer_get_layer(logo_layer));
+
   hands_layer = layer_create(layer_get_frame(background_layer));
   layer_set_update_proc(hands_layer, &hands_layer_update_callback);
   layer_add_child(background_layer, hands_layer);
@@ -225,6 +241,8 @@ void handle_deinit() {
   text_layer_destroy(debug_layer);
 #endif
   layer_destroy(hands_layer);
+  bitmap_layer_destroy(logo_layer);
+  gbitmap_destroy(logo);
   layer_destroy(background_layer);
   layer_destroy(date_layer);
   window_destroy(window);
