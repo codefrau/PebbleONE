@@ -94,7 +94,6 @@ void background_layer_update_callback(Layer *layer, GContext* ctx) {
 }
 
 void hands_layer_update_callback(Layer *layer, GContext* ctx) {
-  if (!now) return;
 #if SCREENSHOT
   now->tm_hour = 10;
   now->tm_min = 9;
@@ -142,7 +141,6 @@ void hands_layer_update_callback(Layer *layer, GContext* ctx) {
 }
 
 void date_layer_update_callback(Layer *layer, GContext* ctx) {
-  if (!now) return;
 
 #if SCREENSHOT
   now->tm_wday = 0;
@@ -179,6 +177,8 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 void handle_init() {
+  time_t clock = time(NULL);
+  now = localtime(&clock);
   window = window_create();
   window_stack_push(window, true /* Animated */);
   window_set_background_color(window, GColorBlack);
@@ -225,13 +225,13 @@ void handle_init() {
 #endif
 
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
-  //bmp_init_container(RESOURCE_ID_IMAGE_LOGO, &logo);
 
   tick_timer_service_subscribe(UPDATE_UNIT, &handle_tick);
 }
 
 void handle_deinit() {
   tick_timer_service_unsubscribe();
+  fonts_unload_custom_font(font);
 #if SECONDS
   gpath_destroy(sec_path);
 #endif
