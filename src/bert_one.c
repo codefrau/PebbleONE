@@ -1,15 +1,8 @@
 #include <pebble.h>
 #include <time.h>
 
-#define SECONDS    1
 #define SCREENSHOT 0
-#define DEBUG      0
-
-#if SECONDS
-#define UPDATE_UNIT SECOND_UNIT
-#else
-#define UPDATE_UNIT MINUTE_UNIT
-#endif
+#define DEBUG      1
 
 #define ONE        TRIG_MAX_RATIO
 #define THREESIXTY TRIG_MAX_ANGLE
@@ -32,7 +25,15 @@ static Layer *date_layer;
 static GBitmap *logo;
 static BitmapLayer *logo_layer;
 
+static GBitmap *battery_empty;
+static GBitmap *battery_low;
+static GBitmap *battery_charging;
+static GBitmap *battery_charged;
+static GBitmap *battery_full;
+static BitmapLayer *battery_layer;
+
 static struct tm *now = NULL;
+static bool hide_seconds = false;
 
 static GFont *font;
 #define DATE_BUFFER_BYTES 32
@@ -70,7 +71,6 @@ const GPathInfo MIN_POINTS = {
 };
 static GPath *min_path;
 
-#if SECONDS
 const GPathInfo SEC_POINTS = {
   4,
   (GPoint []) {
@@ -81,7 +81,6 @@ const GPathInfo SEC_POINTS = {
   }
 };
 static GPath *sec_path;
-#endif
 
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
 	graphics_context_set_fill_color(ctx, GColorWhite);
@@ -100,11 +99,6 @@ void hands_layer_update_callback(Layer *layer, GContext* ctx) {
   now->tm_sec = 36;
 #endif
 
-#if DEBUG
-  strftime(debug_buffer, DEBUG_BUFFER_BYTES, "%d.%m.%Y %H:%M:%S", now);
-  text_layer_set_text(debug_layer, debug_buffer);
-#endif
-
   GPoint center = GPoint(CENTER_X, CENTER_Y);
 
   // hours and minutes
@@ -121,19 +115,19 @@ void hands_layer_update_callback(Layer *layer, GContext* ctx) {
   gpath_draw_outline(ctx, min_path);
   graphics_fill_circle(ctx, center, DOTS_SIZE+3);
 
-#if SECONDS
   // seconds
-  int32_t sec_angle = THREESIXTY * now->tm_sec / 60;
-  GPoint sec_pos = GPoint(
-    CENTER_X + SEC_RADIUS * sin_lookup(sec_angle) / ONE,
-    CENTER_Y - SEC_RADIUS * cos_lookup(sec_angle) / ONE);
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  gpath_rotate_to(sec_path, sec_angle);
-  gpath_draw_filled(ctx, sec_path);
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_context_set_compositing_mode(ctx, GCompOpAssignInverted);
-  graphics_draw_line(ctx, center, sec_pos);
-#endif
+  if (!hide_seconds) {
+    int32_t sec_angle = THREESIXTY * now->tm_sec / 60;
+    GPoint sec_pos = GPoint(
+      CENTER_X + SEC_RADIUS * sin_lookup(sec_angle) / ONE,
+      CENTER_Y - SEC_RADIUS * cos_lookup(sec_angle) / ONE);
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    gpath_rotate_to(sec_path, sec_angle);
+    gpath_draw_filled(ctx, sec_path);
+    graphics_context_set_stroke_color(ctx, GColorWhite);
+    graphics_context_set_compositing_mode(ctx, GCompOpAssignInverted);
+    graphics_draw_line(ctx, center, sec_pos);
+  }
 
   // center dot
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -176,6 +170,27 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   layer_mark_dirty(date_layer);
 }
 
+void handle_battery(BatteryChargeState charge_state) {
+#if DEBUG
+  //strftime(debug_buffer, DEBUG_BUFFER_BYTES, "%d.%m.%Y %H:%M:%S", now);
+  snprintf(debug_buffer, DEBUG_BUFFER_BYTES, "%s%d%%",  charge_state.is_charging ? "+" : "", charge_state.charge_percent);
+  text_layer_set_text(debug_layer, debug_buffer);
+#endif
+  bitmap_layer_set_bitmap	(battery_layer,
+    charge_state.charge_percent == 100 ? battery_full :
+    charge_state.is_charging
+      ? (charge_state.charge_percent < 50 ? battery_charging : battery_charged)
+      : (charge_state.charge_percent < 10 ? battery_empty : battery_low));
+  bool battery_is_low = charge_state.charge_percent <= 20;
+  bool preserve_battery = battery_is_low && !charge_state.is_charging;
+  if (hide_seconds != preserve_battery) {
+    hide_seconds = preserve_battery;
+    tick_timer_service_unsubscribe();
+    tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
+  }
+  layer_set_hidden(bitmap_layer_get_layer(battery_layer), !(charge_state.is_charging || battery_is_low));
+}
+
 void handle_init() {
   time_t clock = time(NULL);
   now = localtime(&clock);
@@ -203,14 +218,25 @@ void handle_init() {
   bitmap_layer_set_bitmap	(logo_layer, logo);
   layer_add_child(background_layer, bitmap_layer_get_layer(logo_layer));
 
+  battery_empty    = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_EMPTY);  
+  battery_low      = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_LOW);  
+  battery_charging = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGING);  
+  battery_charged  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGED);  
+  battery_full     = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_FULL);  
+  battery_layer = bitmap_layer_create(GRect(144-16, 0, 16, 10));
+  bitmap_layer_set_bitmap	(battery_layer, battery_full);
+  layer_add_child(background_layer, bitmap_layer_get_layer(battery_layer));
+
   hands_layer = layer_create(layer_get_frame(background_layer));
   layer_set_update_proc(hands_layer, &hands_layer_update_callback);
   layer_add_child(background_layer, hands_layer);
 
 #if DEBUG
-  debug_layer = text_layer_create(GRect(0, 0, 144, 16));
+  debug_layer = text_layer_create(GRect(0, 0, 32, 16));
   strcpy(debug_buffer, "");
   text_layer_set_text(debug_layer, debug_buffer);
+  text_layer_set_text_color(debug_layer, GColorWhite);
+  text_layer_set_background_color(debug_layer, GColorBlack);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(debug_layer));
 #endif
   
@@ -219,22 +245,22 @@ void handle_init() {
 
   min_path = gpath_create(&MIN_POINTS);
   gpath_move_to(min_path, GPoint(CENTER_X, CENTER_Y));
-#if SECONDS
+
   sec_path = gpath_create(&SEC_POINTS);
   gpath_move_to(sec_path, GPoint(CENTER_X, CENTER_Y));
-#endif
 
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
 
-  tick_timer_service_subscribe(UPDATE_UNIT, &handle_tick);
+  tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
+  battery_state_service_subscribe(&handle_battery);
+  handle_battery(battery_state_service_peek());
 }
 
 void handle_deinit() {
+  battery_state_service_unsubscribe();
   tick_timer_service_unsubscribe();
   fonts_unload_custom_font(font);
-#if SECONDS
   gpath_destroy(sec_path);
-#endif
   gpath_destroy(min_path);
   gpath_destroy(hour_path);
 #if DEBUG
@@ -243,6 +269,12 @@ void handle_deinit() {
   layer_destroy(hands_layer);
   bitmap_layer_destroy(logo_layer);
   gbitmap_destroy(logo);
+  bitmap_layer_destroy(battery_layer);
+  gbitmap_destroy(battery_empty);
+  gbitmap_destroy(battery_low);
+  gbitmap_destroy(battery_charging);
+  gbitmap_destroy(battery_charged);
+  gbitmap_destroy(battery_full);
   layer_destroy(background_layer);
   layer_destroy(date_layer);
   window_destroy(window);

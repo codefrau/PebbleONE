@@ -1,10 +1,10 @@
 {
   "uuid": "f6c1ad30-2e14-427a-b959-9442f3a46949",
   "shortName": "ONE",
-  "longName": "Bert ONE",
+  "longName": "The ONE Watch Face",
   "companyName": "Bert Freudenberg",
-  "versionCode": 2,
-  "versionLabel": "2.0.0",
+  "versionCode": 3,
+  "versionLabel": "2.1.0",
   "watchapp": {
     "watchface": true
   },
@@ -21,6 +21,31 @@
         "type": "png",
         "name": "IMAGE_LOGO",
         "file": "images/pebble9x4.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_BATTERY_EMPTY",
+        "file": "images/battery_empty.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_BATTERY_LOW",
+        "file": "images/battery_low.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_BATTERY_FULL",
+        "file": "images/battery_full.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_BATTERY_CHARGING",
+        "file": "images/battery_charging.png"
+      },
+      {
+        "type": "png",
+        "name": "IMAGE_BATTERY_CHARGED",
+        "file": "images/battery_CHARGED.png"
       },
       {
         "type": "font",
