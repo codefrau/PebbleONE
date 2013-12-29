@@ -215,8 +215,8 @@ void handle_battery(BatteryChargeState charge_state) {
     charge_state.charge_percent == 100 ? battery_full :
     charge_state.is_charging
       ? (charge_state.charge_percent < 50 ? battery_charging : battery_charged)
-      : (charge_state.charge_percent <= 10 ? battery_empty : battery_low));
-  bool battery_is_low = charge_state.charge_percent <= 20;
+      : (charge_state.charge_percent <= 5 ? battery_empty : battery_low));
+  bool battery_is_low = charge_state.charge_percent <= 10;
   bool show_seconds = secondsMode == SECONDS_MODE_ALWAYS
     || (secondsMode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
   bool showBattery = batteryMode == BATTERY_MODE_ALWAYS
