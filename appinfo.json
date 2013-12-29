@@ -12,8 +12,8 @@
     "configurable"
   ],
   "appKeys": {
-    "secondsMode": 0,
-    "batteryMode": 1
+    "seconds_mode": 0,
+    "battery_mode": 1
   },
   "resources": {
     "media": [

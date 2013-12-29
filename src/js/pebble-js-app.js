@@ -29,8 +29,8 @@ var SECONDS_MODE_NEVER    = 0,
     BATTERY_MODE_ALWAYS   = 2;
 
 var config = {
-    secondsMode: SECONDS_MODE_ALWAYS,
-    batteryMode: BATTERY_MODE_IF_LOW,
+    seconds_mode: SECONDS_MODE_ALWAYS,
+    battery_mode: BATTERY_MODE_IF_LOW,
 };
 
 var config_html; // see bottom of file
@@ -85,7 +85,7 @@ config_html = '<!DOCTYPE html>\
         background: linear-gradient(rgb(230,230,230), rgb(150,150,150));\
     }\
     div.center {text-align: center}\
-    h1 {color: rgb(100,100,100)}\
+    h1 {color: rgb(100,100,100); margin-top: 0, padding-top: 0;}\
     input,select {\
         background-color: rgb(128, 255, 0);\
         -webkit-transform: scale(1.8,1.8);\
@@ -96,21 +96,21 @@ config_html = '<!DOCTYPE html>\
         float: right;\
         -webkit-transform-origin: 100% 100%;\
     }\
+    p,a {color: rgb(200,200,200)}\
     </style>\
 </head>\
 <body>\
     <div class="center">\
-        Bert Freudenberg&rsquo;s\
         <h1>ONE</h1>\
     </div>\
     <form onsubmit="return onSubmit(this)">\
-        <select id="secondsMode">\
+        <select id="seconds_mode">\
         <option>Never show seconds</option>\
         <option>No seconds if low battery</option>\
         <option>Always show seconds</option>\
         </select>\
         <br><br><br><br>\
-        <select id="batteryMode">\
+        <select id="battery_mode">\
         <option>Never show battery</option>\
         <option>Only show battery if low</option>\
         <option>Always show battery</option>\
@@ -119,14 +119,21 @@ config_html = '<!DOCTYPE html>\
         <input type="submit" value="OK">\
         <br><br>\
     </form>\
+    <p>\
+    This is an open source app: <a href="https://github.com/bertfreudenberg/PebbleONE">Here is the source code</a>.\
+    Contributions are highly welcome!<br>\
+    -- Bert Freudenberg, December 2013\
+    </p>\
     <script>\
         var config = JSON.parse(\'__CONFIG__\');\
-        document.getElementById("secondsMode").options.selectedIndex = config.secondsMode;\
-        document.getElementById("batteryMode").options.selectedIndex = config.batteryMode;\
+        document.getElementById("seconds_mode").options.selectedIndex = config.seconds_mode;\
+        document.getElementById("battery_mode").options.selectedIndex = config.battery_mode;\
         function onSubmit(e) {\
-            config.secondsMode = document.getElementById("secondsMode").options.selectedIndex;\
-            config.batteryMode = document.getElementById("batteryMode").options.selectedIndex;\
-            window.location.href = "pebblejs://close#" + JSON.stringify(config);\
+            var result = {\
+                seconds_mode: document.getElementById("seconds_mode").options.selectedIndex,\
+                battery_mode: document.getElementById("battery_mode").options.selectedIndex,\
+            };\
+            window.location.href = "pebblejs://close#" + JSON.stringify(result);\
             return false;\
         }\
     </script>\

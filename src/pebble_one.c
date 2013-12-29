@@ -49,8 +49,8 @@
 #define MIN_RADIUS  60
 #define SEC_RADIUS  62
 
-static int secondsMode = SECONDS_MODE_ALWAYS;
-static int batteryMode = BATTERY_MODE_IF_LOW;
+static int seconds_mode = SECONDS_MODE_ALWAYS;
+static int battery_mode = BATTERY_MODE_IF_LOW;
 
 static Window *window;
 static Layer *background_layer;
@@ -217,13 +217,13 @@ void handle_battery(BatteryChargeState charge_state) {
       ? (charge_state.charge_percent < 50 ? battery_charging : battery_charged)
       : (charge_state.charge_percent <= 5 ? battery_empty : battery_low));
   bool battery_is_low = charge_state.charge_percent <= 10;
-  bool show_seconds = secondsMode == SECONDS_MODE_ALWAYS
-    || (secondsMode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
-  bool showBattery = batteryMode == BATTERY_MODE_ALWAYS
-    || (batteryMode == BATTERY_MODE_IF_LOW && battery_is_low)
+  bool showSeconds = seconds_mode == SECONDS_MODE_ALWAYS
+    || (seconds_mode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
+  bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
+    || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
-  if (hide_seconds != !show_seconds) {
-    hide_seconds = !show_seconds;
+  if (hide_seconds != !showSeconds) {
+    hide_seconds = !showSeconds;
     tick_timer_service_unsubscribe();
     tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   }
@@ -235,10 +235,10 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   while (tuple) {
     switch (tuple->key) {
       case APPKEY_SECONDS_MODE:
-        secondsMode = tuple->value->int32;
+        seconds_mode = tuple->value->int32;
         break;
       case APPKEY_BATTERY_MODE:
-        batteryMode = tuple->value->int32;
+        battery_mode = tuple->value->int32;
         break;
     }
     tuple = dict_read_next(received);
