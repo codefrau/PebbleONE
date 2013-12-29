@@ -1,8 +1,40 @@
+/*
+ * Copyright (c) 2013 Bert Freudenberg
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <pebble.h>
 #include <time.h>
 
+#define APPKEY_SECONDS_MODE 0
+#define APPKEY_BATTERY_MODE 1
+
+#define SECONDS_MODE_NEVER    0
+#define SECONDS_MODE_IFNOTLOW 1
+#define SECONDS_MODE_ALWAYS   2
+#define BATTERY_MODE_NEVER    0
+#define BATTERY_MODE_IF_LOW   1
+#define BATTERY_MODE_ALWAYS   2
+
 #define SCREENSHOT 0
-#define DEBUG      1
+#define DEBUG      0
 
 #define ONE        TRIG_MAX_RATIO
 #define THREESIXTY TRIG_MAX_ANGLE
@@ -16,6 +48,9 @@
 #define HOUR_RADIUS 40
 #define MIN_RADIUS  60
 #define SEC_RADIUS  62
+
+static int secondsMode = SECONDS_MODE_ALWAYS;
+static int batteryMode = BATTERY_MODE_IF_LOW;
 
 static Window *window;
 static Layer *background_layer;
@@ -180,16 +215,37 @@ void handle_battery(BatteryChargeState charge_state) {
     charge_state.charge_percent == 100 ? battery_full :
     charge_state.is_charging
       ? (charge_state.charge_percent < 50 ? battery_charging : battery_charged)
-      : (charge_state.charge_percent < 10 ? battery_empty : battery_low));
+      : (charge_state.charge_percent <= 10 ? battery_empty : battery_low));
   bool battery_is_low = charge_state.charge_percent <= 20;
-  bool preserve_battery = battery_is_low && !charge_state.is_charging;
-  if (hide_seconds != preserve_battery) {
-    hide_seconds = preserve_battery;
+  bool show_seconds = secondsMode == SECONDS_MODE_ALWAYS
+    || (secondsMode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
+  bool showBattery = batteryMode == BATTERY_MODE_ALWAYS
+    || (batteryMode == BATTERY_MODE_IF_LOW && battery_is_low)
+    || charge_state.is_charging;
+  if (hide_seconds != !show_seconds) {
+    hide_seconds = !show_seconds;
     tick_timer_service_unsubscribe();
     tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   }
-  layer_set_hidden(bitmap_layer_get_layer(battery_layer), !(charge_state.is_charging || battery_is_low));
+  layer_set_hidden(bitmap_layer_get_layer(battery_layer), !showBattery);
 }
+
+void handle_appmessage_receive(DictionaryIterator *received, void *context) {
+  Tuple *tuple = dict_read_first(received);
+  while (tuple) {
+    switch (tuple->key) {
+      case APPKEY_SECONDS_MODE:
+        secondsMode = tuple->value->int32;
+        break;
+      case APPKEY_BATTERY_MODE:
+        batteryMode = tuple->value->int32;
+        break;
+    }
+    tuple = dict_read_next(received);
+  }
+  handle_battery(battery_state_service_peek());
+}
+
 
 void handle_init() {
   time_t clock = time(NULL);
@@ -223,7 +279,7 @@ void handle_init() {
   battery_charging = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGING);  
   battery_charged  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGED);  
   battery_full     = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_FULL);  
-  battery_layer = bitmap_layer_create(GRect(144-16, 0, 16, 10));
+  battery_layer = bitmap_layer_create(GRect(144-16-3, 3, 16, 10));
   bitmap_layer_set_bitmap	(battery_layer, battery_full);
   layer_add_child(background_layer, bitmap_layer_get_layer(battery_layer));
 
@@ -254,9 +310,12 @@ void handle_init() {
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
   handle_battery(battery_state_service_peek());
+  app_message_register_inbox_received(&handle_appmessage_receive);
+  app_message_open(64, 0);
 }
 
 void handle_deinit() {
+  app_message_deregister_callbacks();
   battery_state_service_unsubscribe();
   tick_timer_service_unsubscribe();
   fonts_unload_custom_font(font);
