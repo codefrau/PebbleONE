@@ -8,6 +8,8 @@ You need the [Pebble SDK 2.0][sdk2] to build it.
 
 Contributions are highly welcome - just send me a [pull request][pullreq].
 
+-- Bert Freudenberg, December 2013
+
 [pebble]:  https://getpebble.com/
 [sdk2]:    https://developer.getpebble.com/2/
 [pullreq]: https://help.github.com/articles/using-pull-requests

@@ -30,41 +30,40 @@ var SECONDS_MODE_NEVER    = 0,
 
 var config = {
     seconds_mode: SECONDS_MODE_ALWAYS,
-    battery_mode: BATTERY_MODE_IF_LOW,
+    battery_mode: BATTERY_MODE_IF_LOW
 };
 
 var config_html; // see bottom of file
 
 // read config from persistent storage
 Pebble.addEventListener('ready',
-    function(e) {
+    function () {
         var json = window.localStorage.getItem('config');
-        if (typeof json === 'string')
+        if (typeof json === 'string') {
             config = JSON.parse(json);
+        }
         console.log(JSON.stringify(config));
-    }
-);
+    });
 
 // open config window
 Pebble.addEventListener('showConfiguration',
-    function(e) {
+    function () {
         var html = config_html.replace('__CONFIG__', JSON.stringify(config), 'g');
         Pebble.openURL('data:text/html,' + encodeURI(html + '<!--.html'));
-    }
-);
+    });
 
 // store config and send to watch
 Pebble.addEventListener('webviewclosed',
-    function(e) {
-        if (!e.response) return;
-        config = JSON.parse(e.response);
-        console.log(JSON.stringify(config));
-        window.localStorage.setItem('config', e.response);
-        Pebble.sendAppMessage(config,
-            function ack(e) { console.log("Successfully delivered message: " + JSON.stringify(e)) },
-            function nack(e) { console.log("Unable to deliver message: " + JSON.stringify(e)) });
-    }
-);
+    function (e) {
+        if (e.response && e.response.length) {
+            config = JSON.parse(e.response);
+            console.log(JSON.stringify(config));
+            window.localStorage.setItem('config', e.response);
+            Pebble.sendAppMessage(config,
+                function ack(e) { console.log("Successfully delivered message: " + JSON.stringify(e)); },
+                function nack(e) { console.log("Unable to deliver message: " + JSON.stringify(e)); });
+        }
+    });
 
 
 config_html = '<!DOCTYPE html>\
@@ -105,13 +104,13 @@ config_html = '<!DOCTYPE html>\
     </div>\
     <form onsubmit="return onSubmit(this)">\
         <select id="seconds_mode">\
-        <option>Never show seconds</option>\
+        <option>Do not show seconds</option>\
         <option>No seconds if low battery</option>\
         <option>Always show seconds</option>\
         </select>\
         <br><br><br><br>\
         <select id="battery_mode">\
-        <option>Never show battery</option>\
+        <option>Do not show battery</option>\
         <option>Only show battery if low</option>\
         <option>Always show battery</option>\
         </select>\
