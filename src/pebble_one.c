@@ -211,6 +211,11 @@ void handle_battery(BatteryChargeState charge_state) {
   snprintf(debug_buffer, DEBUG_BUFFER_BYTES, "%s%d%%",  charge_state.is_charging ? "+" : "", charge_state.charge_percent);
   text_layer_set_text(debug_layer, debug_buffer);
 #endif
+#if SCREENSHOT
+  bitmap_layer_set_bitmap(battery_layer, battery_low);
+  bool showSeconds = true;
+  bool showBattery = true;
+#else
   bitmap_layer_set_bitmap	(battery_layer,
     charge_state.charge_percent == 100 ? battery_full :
     charge_state.is_charging
@@ -222,6 +227,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
+#endif
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
     tick_timer_service_unsubscribe();
