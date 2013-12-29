@@ -25,6 +25,7 @@
 
 #define APPKEY_SECONDS_MODE 0
 #define APPKEY_BATTERY_MODE 1
+#define APPKEY_DATE_MODE    2
 
 #define SECONDS_MODE_NEVER    0
 #define SECONDS_MODE_IFNOTLOW 1
@@ -32,6 +33,8 @@
 #define BATTERY_MODE_NEVER    0
 #define BATTERY_MODE_IF_LOW   1
 #define BATTERY_MODE_ALWAYS   2
+#define DATE_MODE_NEVER       0
+#define DATE_MODE_ALWAYS      1
 
 #define SCREENSHOT 0
 #define DEBUG      0
@@ -51,6 +54,7 @@
 
 static int seconds_mode = SECONDS_MODE_ALWAYS;
 static int battery_mode = BATTERY_MODE_IF_LOW;
+static int date_mode    = DATE_MODE_ALWAYS;
 
 static Window *window;
 static Layer *background_layer;
@@ -202,7 +206,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   now = tick_time;
   layer_mark_dirty(hands_layer);
-  layer_mark_dirty(date_layer);
+  if (date_mode != DATE_MODE_NEVER) layer_mark_dirty(date_layer);
 }
 
 void handle_battery(BatteryChargeState charge_state) {
@@ -215,9 +219,10 @@ void handle_battery(BatteryChargeState charge_state) {
   bitmap_layer_set_bitmap(battery_layer, battery_low);
   bool showSeconds = true;
   bool showBattery = true;
+  bool showDate = true;
 #else
   bitmap_layer_set_bitmap	(battery_layer,
-    charge_state.charge_percent == 100 ? battery_full :
+    charge_state.charge_percent >= 90 ? battery_full :
     charge_state.is_charging
       ? (charge_state.charge_percent < 50 ? battery_charging : battery_charged)
       : (charge_state.charge_percent <= 5 ? battery_empty : battery_low));
@@ -227,6 +232,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
+  bool showDate = date_mode != DATE_MODE_NEVER;
 #endif
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
@@ -234,6 +240,10 @@ void handle_battery(BatteryChargeState charge_state) {
     tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   }
   layer_set_hidden(bitmap_layer_get_layer(battery_layer), !showBattery);
+  if (layer_get_hidden(date_layer) != !showDate) {
+    layer_set_hidden(date_layer, !showDate);
+    layer_set_frame(background_layer, GRect(0, showDate ? 0 : 12, 144, 144));
+  }
 }
 
 void handle_appmessage_receive(DictionaryIterator *received, void *context) {
@@ -245,6 +255,9 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
         break;
       case APPKEY_BATTERY_MODE:
         battery_mode = tuple->value->int32;
+        break;
+      case APPKEY_DATE_MODE:
+        date_mode = tuple->value->int32;
         break;
     }
     tuple = dict_read_next(received);
@@ -280,6 +293,10 @@ void handle_init() {
   bitmap_layer_set_bitmap	(logo_layer, logo);
   layer_add_child(background_layer, bitmap_layer_get_layer(logo_layer));
 
+  hands_layer = layer_create(layer_get_frame(background_layer));
+  layer_set_update_proc(hands_layer, &hands_layer_update_callback);
+  layer_add_child(background_layer, hands_layer);
+
   battery_empty    = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_EMPTY);  
   battery_low      = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_LOW);  
   battery_charging = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGING);  
@@ -287,11 +304,7 @@ void handle_init() {
   battery_full     = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_FULL);  
   battery_layer = bitmap_layer_create(GRect(144-16-3, 3, 16, 10));
   bitmap_layer_set_bitmap	(battery_layer, battery_full);
-  layer_add_child(background_layer, bitmap_layer_get_layer(battery_layer));
-
-  hands_layer = layer_create(layer_get_frame(background_layer));
-  layer_set_update_proc(hands_layer, &hands_layer_update_callback);
-  layer_add_child(background_layer, hands_layer);
+  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(battery_layer));
 
 #if DEBUG
   debug_layer = text_layer_create(GRect(0, 0, 32, 16));
@@ -304,10 +317,8 @@ void handle_init() {
   
   hour_path = gpath_create(&HOUR_POINTS);
   gpath_move_to(hour_path, GPoint(CENTER_X, CENTER_Y));
-
   min_path = gpath_create(&MIN_POINTS);
   gpath_move_to(min_path, GPoint(CENTER_X, CENTER_Y));
-
   sec_path = gpath_create(&SEC_POINTS);
   gpath_move_to(sec_path, GPoint(CENTER_X, CENTER_Y));
 

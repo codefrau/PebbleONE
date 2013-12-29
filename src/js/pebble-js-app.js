@@ -27,10 +27,13 @@ var SECONDS_MODE_NEVER    = 0,
     BATTERY_MODE_NEVER    = 0,
     BATTERY_MODE_IF_LOW   = 1,
     BATTERY_MODE_ALWAYS   = 2;
+    DATE_MODE_NEVER       = 0,
+    DATE_MODE_ALWAYS      = 1;
 
 var config = {
     seconds_mode: SECONDS_MODE_ALWAYS,
-    battery_mode: BATTERY_MODE_IF_LOW
+    battery_mode: BATTERY_MODE_IF_LOW,
+    date_mode:    DATE_MODE_ALWAYS,
 };
 
 var config_html; // see bottom of file
@@ -108,13 +111,18 @@ config_html = '<!DOCTYPE html>\
         <option>No seconds if low battery</option>\
         <option>Always show seconds</option>\
         </select>\
-        <br><br><br><br>\
+        <br><br><br>\
         <select id="battery_mode">\
         <option>Do not show battery</option>\
         <option>Only show battery if low</option>\
         <option>Always show battery</option>\
         </select>\
-        <br><br><br><br><br>\
+        <br><br><br>\
+        <select id="date_mode">\
+        <option>Do not show date</option>\
+        <option>Show date</option>\
+        </select>\
+        <br><br><br><br>\
         <input type="submit" value="Save">\
         <br><br>\
     </form>\
@@ -127,10 +135,12 @@ config_html = '<!DOCTYPE html>\
         var config = JSON.parse(\'__CONFIG__\');\
         document.getElementById("seconds_mode").options.selectedIndex = config.seconds_mode;\
         document.getElementById("battery_mode").options.selectedIndex = config.battery_mode;\
+        document.getElementById("date_mode").options.selectedIndex = config.date_mode;\
         function onSubmit(e) {\
             var result = {\
                 seconds_mode: document.getElementById("seconds_mode").options.selectedIndex,\
                 battery_mode: document.getElementById("battery_mode").options.selectedIndex,\
+                date_mode: document.getElementById("date_mode").options.selectedIndex,\
             };\
             window.location.href = "pebblejs://close#" + JSON.stringify(result);\
             return false;\

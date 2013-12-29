@@ -13,7 +13,8 @@
   ],
   "appKeys": {
     "seconds_mode": 0,
-    "battery_mode": 1
+    "battery_mode": 1,
+    "date_mode": 2
   },
   "resources": {
     "media": [
