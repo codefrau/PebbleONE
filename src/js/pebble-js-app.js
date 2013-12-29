@@ -116,7 +116,7 @@ config_html = '<!DOCTYPE html>\
         <option>Always show battery</option>\
         </select>\
         <br><br><br><br><br>\
-        <input type="submit" value="OK">\
+        <input type="submit" value="Save">\
         <br><br>\
     </form>\
     <p>\
