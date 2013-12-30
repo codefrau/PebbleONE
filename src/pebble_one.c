@@ -44,8 +44,6 @@
 
 #define CENTER_X    71
 #define CENTER_Y    71
-#define LOGO_X      72
-#define LOGO_Y      35
 #define DOTS_RADIUS 67
 #define DOTS_SIZE    4
 #define HOUR_RADIUS 40
@@ -282,13 +280,8 @@ void handle_init() {
   layer_add_child(window_get_root_layer(window), background_layer);
 
   logo = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);  
-  GRect frame = (GRect) {
-    .origin = (GPoint) {
-      .x = LOGO_X - logo->bounds.size.w / 2,
-      .y =  LOGO_Y - logo->bounds.size.h / 2
-    },
-    .size = logo->bounds.size
-  };
+  GRect frame = logo->bounds;
+  grect_align(&frame, &GRect(0, 0, 144, 72), GAlignCenter, false);
   logo_layer = bitmap_layer_create(frame);
   bitmap_layer_set_bitmap	(logo_layer, logo);
   layer_add_child(background_layer, bitmap_layer_get_layer(logo_layer));
