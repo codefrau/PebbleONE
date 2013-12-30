@@ -14,7 +14,8 @@
   "appKeys": {
     "seconds_mode": 0,
     "battery_mode": 1,
-    "date_mode": 2
+    "date_mode": 2,
+    "bluetooth_mode": 3
   },
   "resources": {
     "media": [
@@ -42,6 +43,8 @@
       { "type": "png", "name": "IMAGE_CHARGING_80", "file": "images/charging_80.png" },
       { "type": "png", "name": "IMAGE_CHARGING_90", "file": "images/charging_90.png" },
       { "type": "png", "name": "IMAGE_CHARGING_100", "file": "images/charging_100.png" },
+      { "type": "png", "name": "IMAGE_BLUETOOTH_OFF", "file": "images/bluetooth_off.png" },
+      { "type": "png", "name": "IMAGE_BLUETOOTH_ON", "file": "images/bluetooth_on.png" },
       {
         "type": "font",
         "name": "FONT_30",

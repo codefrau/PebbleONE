@@ -29,11 +29,15 @@ var SECONDS_MODE_NEVER    = 0,
     BATTERY_MODE_ALWAYS   = 2;
     DATE_MODE_NEVER       = 0,
     DATE_MODE_ALWAYS      = 1;
+    BLUETOOTH_MODE_NEVER  = 0;
+    BLUETOOTH_MODE_IFOFF  = 1;
+    BLUETOOTH_MODE_ALWAYS = 2;
 
 var config = {
-    seconds_mode: SECONDS_MODE_ALWAYS,
-    battery_mode: BATTERY_MODE_IF_LOW,
-    date_mode:    DATE_MODE_ALWAYS,
+    seconds_mode:   SECONDS_MODE_ALWAYS,
+    battery_mode:   BATTERY_MODE_IF_LOW,
+    date_mode:      DATE_MODE_ALWAYS,
+    bluetooth_mode: BLUETOOTH_MODE_NEVER,
 };
 
 var config_html; // see bottom of file
@@ -118,6 +122,12 @@ config_html = '<!DOCTYPE html>\
         <option>Always show battery</option>\
         </select>\
         <br><br><br>\
+        <select id="bluetooth_mode">\
+        <option>Do not show bluetooth</option>\
+        <option>Show bluetooth if disconnected</option>\
+        <option>Always show bluetooth</option>\
+        </select>\
+        <br><br><br>\
         <select id="date_mode">\
         <option>Do not show date</option>\
         <option>Show date</option>\
@@ -136,11 +146,13 @@ config_html = '<!DOCTYPE html>\
         document.getElementById("seconds_mode").options.selectedIndex = config.seconds_mode;\
         document.getElementById("battery_mode").options.selectedIndex = config.battery_mode;\
         document.getElementById("date_mode").options.selectedIndex = config.date_mode;\
+        document.getElementById("bluetooth_mode").options.selectedIndex = config.bluetooth_mode;\
         function onSubmit(e) {\
             var result = {\
                 seconds_mode: document.getElementById("seconds_mode").options.selectedIndex,\
                 battery_mode: document.getElementById("battery_mode").options.selectedIndex,\
                 date_mode: document.getElementById("date_mode").options.selectedIndex,\
+                bluetooth_mode: document.getElementById("bluetooth_mode").options.selectedIndex,\
             };\
             window.location.href = "pebblejs://close#" + JSON.stringify(result);\
             return false;\

@@ -23,9 +23,10 @@
 #include <pebble.h>
 #include <time.h>
 
-#define APPKEY_SECONDS_MODE 0
-#define APPKEY_BATTERY_MODE 1
-#define APPKEY_DATE_MODE    2
+#define SECONDS_MODE   0
+#define BATTERY_MODE   1
+#define DATE_MODE      2
+#define BLUETOOTH_MODE 3
 
 #define SECONDS_MODE_NEVER    0
 #define SECONDS_MODE_IFNOTLOW 1
@@ -35,6 +36,10 @@
 #define BATTERY_MODE_ALWAYS   2
 #define DATE_MODE_NEVER       0
 #define DATE_MODE_ALWAYS      1
+#define BLUETOOTH_MODE_NEVER  0
+#define BLUETOOTH_MODE_IFOFF  1
+#define BLUETOOTH_MODE_ALWAYS 2
+
 
 #define SCREENSHOT 0
 #define DEBUG      0
@@ -52,9 +57,10 @@
 
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
-static int seconds_mode = SECONDS_MODE_ALWAYS;
-static int battery_mode = BATTERY_MODE_IF_LOW;
-static int date_mode    = DATE_MODE_ALWAYS;
+static int seconds_mode   = SECONDS_MODE_ALWAYS;
+static int battery_mode   = BATTERY_MODE_IF_LOW;
+static int date_mode      = DATE_MODE_ALWAYS;
+static int bluetooth_mode = BLUETOOTH_MODE_NEVER;
 
 static Window *window;
 static Layer *background_layer;
@@ -66,6 +72,9 @@ static BitmapLayer *logo_layer;
 
 static GBitmap *battery_images[22];
 static BitmapLayer *battery_layer;
+
+static GBitmap *bluetooth_images[4];
+static BitmapLayer *bluetooth_layer;
 
 static struct tm *now = NULL;
 static int date_wday = -1;
@@ -211,6 +220,13 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(date_layer);
 }
 
+void handle_bluetooth(bool connected) {
+  bitmap_layer_set_bitmap(bluetooth_layer, bluetooth_images[connected ? 1 : 0]);
+  layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer),
+    bluetooth_mode == BLUETOOTH_MODE_NEVER ||
+    (bluetooth_mode == BLUETOOTH_MODE_IFOFF && connected));
+}
+
 void handle_battery(BatteryChargeState charge_state) {
 #if DEBUG
   //strftime(debug_buffer, DEBUG_BUFFER_BYTES, "%d.%m.%Y %H:%M:%S", now);
@@ -249,19 +265,23 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   Tuple *tuple = dict_read_first(received);
   while (tuple) {
     switch (tuple->key) {
-      case APPKEY_SECONDS_MODE:
+      case SECONDS_MODE:
         seconds_mode = tuple->value->int32;
         break;
-      case APPKEY_BATTERY_MODE:
+      case BATTERY_MODE:
         battery_mode = tuple->value->int32;
         break;
-      case APPKEY_DATE_MODE:
-        date_mode = tuple->value->int32;
-        break;
+        case DATE_MODE:
+          date_mode = tuple->value->int32;
+          break;
+        case BLUETOOTH_MODE:
+          bluetooth_mode = tuple->value->int32;
+          break;
     }
     tuple = dict_read_next(received);
   }
   handle_battery(battery_state_service_peek());
+  handle_bluetooth(bluetooth_connection_service_peek());
 }
 
 
@@ -294,8 +314,12 @@ void handle_init() {
   for (int i = 0; i < 22; i++)
     battery_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_0 + i);  
   battery_layer = bitmap_layer_create(GRect(144-16-3, 3, 16, 10));
-  bitmap_layer_set_bitmap	(battery_layer, battery_images[0]);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(battery_layer));
+
+  for (int i = 0; i < 2; i++)
+    bluetooth_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF + i);  
+  bluetooth_layer = bitmap_layer_create(GRect(66, 0, 13, 13));
+  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bluetooth_layer));
 
 #if DEBUG
   debug_layer = text_layer_create(GRect(0, 0, 32, 16));
@@ -315,12 +339,15 @@ void handle_init() {
 
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
 
-  if (persist_exists(APPKEY_SECONDS_MODE)) seconds_mode = persist_read_int(APPKEY_SECONDS_MODE);
-  if (persist_exists(APPKEY_BATTERY_MODE)) battery_mode = persist_read_int(APPKEY_BATTERY_MODE);
-  if (persist_exists(APPKEY_DATE_MODE)) date_mode = persist_read_int(APPKEY_DATE_MODE);
+  if (persist_exists(SECONDS_MODE)) seconds_mode = persist_read_int(SECONDS_MODE);
+  if (persist_exists(BATTERY_MODE)) battery_mode = persist_read_int(BATTERY_MODE);
+  if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE);
+  if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE);
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
   handle_battery(battery_state_service_peek());
+  bluetooth_connection_service_subscribe(&handle_bluetooth);
+  handle_bluetooth(bluetooth_connection_service_peek());
   app_message_register_inbox_received(&handle_appmessage_receive);
   app_message_open(64, 0);
 }
@@ -329,9 +356,10 @@ void handle_deinit() {
   app_message_deregister_callbacks();
   battery_state_service_unsubscribe();
   tick_timer_service_unsubscribe();
-  persist_write_int(APPKEY_SECONDS_MODE, seconds_mode);
-  persist_write_int(APPKEY_BATTERY_MODE, battery_mode);
-  persist_write_int(APPKEY_DATE_MODE, date_mode);
+  persist_write_int(SECONDS_MODE, seconds_mode);
+  persist_write_int(BATTERY_MODE, battery_mode);
+  persist_write_int(DATE_MODE, date_mode);
+  persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
   fonts_unload_custom_font(font);
   gpath_destroy(sec_path);
   gpath_destroy(min_path);
@@ -345,6 +373,9 @@ void handle_deinit() {
   bitmap_layer_destroy(battery_layer);
   for (int i = 0; i < 22; i++)
     gbitmap_destroy(battery_images[i]);
+  bitmap_layer_destroy(bluetooth_layer);
+  for (int i = 0; i < 2; i++)
+    gbitmap_destroy(bluetooth_images[i]);
   layer_destroy(background_layer);
   layer_destroy(date_layer);
   window_destroy(window);
