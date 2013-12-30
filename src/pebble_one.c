@@ -323,6 +323,9 @@ void handle_init() {
 
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
 
+  if (persist_exists(APPKEY_SECONDS_MODE)) seconds_mode = persist_read_int(APPKEY_SECONDS_MODE);
+  if (persist_exists(APPKEY_BATTERY_MODE)) battery_mode = persist_read_int(APPKEY_BATTERY_MODE);
+  if (persist_exists(APPKEY_DATE_MODE)) date_mode = persist_read_int(APPKEY_DATE_MODE);
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
   handle_battery(battery_state_service_peek());
@@ -334,6 +337,9 @@ void handle_deinit() {
   app_message_deregister_callbacks();
   battery_state_service_unsubscribe();
   tick_timer_service_unsubscribe();
+  persist_write_int(APPKEY_SECONDS_MODE, seconds_mode);
+  persist_write_int(APPKEY_BATTERY_MODE, battery_mode);
+  persist_write_int(APPKEY_DATE_MODE, date_mode);
   fonts_unload_custom_font(font);
   gpath_destroy(sec_path);
   gpath_destroy(min_path);
