@@ -18,42 +18,30 @@
   },
   "resources": {
     "media": [
-      {
-        "menuIcon": true,
-        "type": "png",
-        "name": "IMAGE_MENU_ICON",
-        "file": "images/menu_icon.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_LOGO",
-        "file": "images/pebble9x4.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_BATTERY_EMPTY",
-        "file": "images/battery_empty.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_BATTERY_LOW",
-        "file": "images/battery_low.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_BATTERY_FULL",
-        "file": "images/battery_full.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_BATTERY_CHARGING",
-        "file": "images/battery_charging.png"
-      },
-      {
-        "type": "png",
-        "name": "IMAGE_BATTERY_CHARGED",
-        "file": "images/battery_CHARGED.png"
-      },
+      { "type": "png", "name": "IMAGE_MENU_ICON", "file": "images/menu_icon.png", "menuIcon": true },
+      { "type": "png", "name": "IMAGE_LOGO", "file": "images/pebble9x4.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_0",  "file": "images/battery_0.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_10", "file": "images/battery_10.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_20", "file": "images/battery_20.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_30", "file": "images/battery_30.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_40", "file": "images/battery_40.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_50", "file": "images/battery_50.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_60", "file": "images/battery_60.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_70", "file": "images/battery_70.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_80", "file": "images/battery_80.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_90", "file": "images/battery_90.png" },
+      { "type": "png", "name": "IMAGE_BATTERY_100", "file": "images/battery_100.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_0",  "file": "images/charging_0.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_10", "file": "images/charging_10.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_20", "file": "images/charging_20.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_30", "file": "images/charging_30.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_40", "file": "images/charging_40.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_50", "file": "images/charging_50.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_60", "file": "images/charging_60.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_70", "file": "images/charging_70.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_80", "file": "images/charging_80.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_90", "file": "images/charging_90.png" },
+      { "type": "png", "name": "IMAGE_CHARGING_100", "file": "images/charging_100.png" },
       {
         "type": "font",
         "name": "FONT_30",

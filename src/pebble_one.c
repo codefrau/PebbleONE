@@ -50,6 +50,8 @@
 #define MIN_RADIUS  60
 #define SEC_RADIUS  62
 
+#define max(a,b) ((a) > (b) ? (a) : (b))
+
 static int seconds_mode = SECONDS_MODE_ALWAYS;
 static int battery_mode = BATTERY_MODE_IF_LOW;
 static int date_mode    = DATE_MODE_ALWAYS;
@@ -62,11 +64,7 @@ static Layer *date_layer;
 static GBitmap *logo;
 static BitmapLayer *logo_layer;
 
-static GBitmap *battery_empty;
-static GBitmap *battery_low;
-static GBitmap *battery_charging;
-static GBitmap *battery_charged;
-static GBitmap *battery_full;
+static GBitmap *battery_images[22];
 static BitmapLayer *battery_layer;
 
 static struct tm *now = NULL;
@@ -220,16 +218,13 @@ void handle_battery(BatteryChargeState charge_state) {
   text_layer_set_text(debug_layer, debug_buffer);
 #endif
 #if SCREENSHOT
-  bitmap_layer_set_bitmap(battery_layer, battery_low);
+  bitmap_layer_set_bitmap(battery_layer, battery_images[1]);
   bool showSeconds = true;
   bool showBattery = true;
   bool showDate = true;
 #else
-  bitmap_layer_set_bitmap	(battery_layer,
-    charge_state.charge_percent >= 90 ? battery_full :
-    charge_state.is_charging
-      ? (charge_state.charge_percent < 50 ? battery_charging : battery_charged)
-      : (charge_state.charge_percent <= 5 ? battery_empty : battery_low));
+  bitmap_layer_set_bitmap(battery_layer, battery_images[
+    (charge_state.is_charging ? 11 : 0) + max(charge_state.charge_percent / 9, 10)]); // 90% is max
   bool battery_is_low = charge_state.charge_percent <= 10;
   bool showSeconds = seconds_mode == SECONDS_MODE_ALWAYS
     || (seconds_mode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
@@ -296,13 +291,10 @@ void handle_init() {
   layer_set_update_proc(hands_layer, &hands_layer_update_callback);
   layer_add_child(background_layer, hands_layer);
 
-  battery_empty    = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_EMPTY);  
-  battery_low      = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_LOW);  
-  battery_charging = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGING);  
-  battery_charged  = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_CHARGED);  
-  battery_full     = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_FULL);  
+  for (int i = 0; i < 22; i++)
+    battery_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_0 + i);  
   battery_layer = bitmap_layer_create(GRect(144-16-3, 3, 16, 10));
-  bitmap_layer_set_bitmap	(battery_layer, battery_full);
+  bitmap_layer_set_bitmap	(battery_layer, battery_images[0]);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(battery_layer));
 
 #if DEBUG
@@ -351,11 +343,8 @@ void handle_deinit() {
   bitmap_layer_destroy(logo_layer);
   gbitmap_destroy(logo);
   bitmap_layer_destroy(battery_layer);
-  gbitmap_destroy(battery_empty);
-  gbitmap_destroy(battery_low);
-  gbitmap_destroy(battery_charging);
-  gbitmap_destroy(battery_charged);
-  gbitmap_destroy(battery_full);
+  for (int i = 0; i < 22; i++)
+    gbitmap_destroy(battery_images[i]);
   layer_destroy(background_layer);
   layer_destroy(date_layer);
   window_destroy(window);
