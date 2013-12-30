@@ -235,9 +235,9 @@ void handle_battery(BatteryChargeState charge_state) {
 #endif
 #if SCREENSHOT
   bitmap_layer_set_bitmap(battery_layer, battery_images[1]);
-  bool showSeconds = true;
-  bool showBattery = true;
-  bool showDate = true;
+  bool showSeconds = seconds_mode != SECONDS_MODE_NEVER;
+  bool showBattery = battery_mode != BATTERY_MODE_NEVER;
+  bool showDate = date_mode != DATE_MODE_NEVER;
 #else
   bitmap_layer_set_bitmap(battery_layer, battery_images[
     (charge_state.is_charging ? 11 : 0) + max(charge_state.charge_percent / 9, 10)]); // 90% is max
@@ -319,7 +319,7 @@ void handle_init() {
   for (int i = 0; i < 2; i++)
     bluetooth_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF + i);  
   bluetooth_layer = bitmap_layer_create(GRect(66, 0, 13, 13));
-  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bluetooth_layer));
+  layer_add_child(background_layer, bitmap_layer_get_layer(bluetooth_layer));
 
 #if DEBUG
   debug_layer = text_layer_create(GRect(0, 0, 32, 16));
