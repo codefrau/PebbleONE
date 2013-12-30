@@ -3,8 +3,8 @@
   "shortName": "ONE",
   "longName": "The ONE Watch Face",
   "companyName": "Bert Freudenberg",
-  "versionCode": 3,
-  "versionLabel": "2.1.0",
+  "versionCode": 4,
+  "versionLabel": "2.2.0",
   "watchapp": {
     "watchface": true
   },
