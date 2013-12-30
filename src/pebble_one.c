@@ -70,6 +70,8 @@ static GBitmap *battery_full;
 static BitmapLayer *battery_layer;
 
 static struct tm *now = NULL;
+static int date_wday = -1;
+static int date_mday = -1;
 static bool hide_seconds = false;
 
 static GFont *font;
@@ -199,12 +201,16 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
     GTextOverflowModeWordWrap,
     GTextAlignmentRight,
     NULL);
+
+  date_wday = now->tm_wday;
+  date_mday = now->tm_mday;
 }
 
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   now = tick_time;
   layer_mark_dirty(hands_layer);
-  if (date_mode != DATE_MODE_NEVER) layer_mark_dirty(date_layer);
+  if (date_mode != DATE_MODE_NEVER && (now->tm_wday != date_wday || now->tm_mday != date_mday))
+    layer_mark_dirty(date_layer);
 }
 
 void handle_battery(BatteryChargeState charge_state) {
