@@ -40,7 +40,8 @@ var config = {
     bluetooth_mode: BLUETOOTH_MODE_NEVER,
 };
 
-var config_html; // see bottom of file
+// config.html will be included by build process, see build/src/js/pebble-js-app.js
+var config_html; 
 
 // read config from persistent storage
 Pebble.addEventListener('ready',
@@ -72,91 +73,3 @@ Pebble.addEventListener('webviewclosed',
         }
     });
 
-
-config_html = '<!DOCTYPE html>\
-<html>\
-<head>\
-    <meta name="viewport" content="width=device-width">\
-    <style>\
-    body {\
-        background-color: rgb(100,100,100);\
-        font-family: sans-serif;\
-    }\
-    div,form {\
-        text-shadow: 0px 1px 1px white;\
-        padding: 10px;\
-        margin: 10px 0;\
-        border: 1px solid rgb(50,50,50);\
-        border-radius: 10px;\
-        background: linear-gradient(rgb(230,230,230), rgb(150,150,150));\
-    }\
-    div.center {text-align: center}\
-    h1 {color: rgb(100,100,100); margin-top: 0, padding-top: 0;}\
-    input,select {\
-        background-color: rgb(128, 255, 0);\
-        -webkit-transform: scale(1.8,1.8);\
-        -webkit-transform-origin: 0% 0%;\
-        width: 155px;\
-    }\
-    input {\
-        float: right;\
-        -webkit-transform-origin: 100% 100%;\
-    }\
-    p,a {color: rgb(200,200,200)}\
-    </style>\
-</head>\
-<body>\
-    <div class="center">\
-        <h1>ONE</h1>\
-    </div>\
-    <form onsubmit="return onSubmit(this)">\
-        <select id="seconds_mode">\
-        <option>Do not show seconds</option>\
-        <option>No seconds if low battery</option>\
-        <option>Always show seconds</option>\
-        </select>\
-        <br><br><br>\
-        <select id="battery_mode">\
-        <option>Do not show battery</option>\
-        <option>Only show battery if low</option>\
-        <option>Always show battery</option>\
-        </select>\
-        <br><br><br>\
-        <select id="bluetooth_mode">\
-        <option>Do not show bluetooth</option>\
-        <option>Show bluetooth if disconnected</option>\
-        <option>Always show bluetooth</option>\
-        </select>\
-        <br><br><br>\
-        <select id="date_mode">\
-        <option>Do not show date</option>\
-        <option>Show date</option>\
-        </select>\
-        <br><br><br><br>\
-        <input type="submit" value="Save">\
-        <br><br>\
-    </form>\
-    <p>\
-    This is an open source app: <a href="https://github.com/bertfreudenberg/PebbleONE">Here is the source code</a>.\
-    Contributions are highly welcome!<br>\
-    -- Bert Freudenberg, December 2013\
-    </p>\
-    <script>\
-        var config = JSON.parse(\'__CONFIG__\');\
-        document.getElementById("seconds_mode").options.selectedIndex = config.seconds_mode;\
-        document.getElementById("battery_mode").options.selectedIndex = config.battery_mode;\
-        document.getElementById("date_mode").options.selectedIndex = config.date_mode;\
-        document.getElementById("bluetooth_mode").options.selectedIndex = config.bluetooth_mode;\
-        function onSubmit(e) {\
-            var result = {\
-                seconds_mode: document.getElementById("seconds_mode").options.selectedIndex,\
-                battery_mode: document.getElementById("battery_mode").options.selectedIndex,\
-                date_mode: document.getElementById("date_mode").options.selectedIndex,\
-                bluetooth_mode: document.getElementById("bluetooth_mode").options.selectedIndex,\
-            };\
-            window.location.href = "pebblejs://close#" + JSON.stringify(result);\
-            return false;\
-        }\
-    </script>\
-</body>\
-</html>';
