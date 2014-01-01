@@ -23,10 +23,12 @@
 #include <pebble.h>
 #include <time.h>
 
+// keys for app message and storage
 #define SECONDS_MODE   0
 #define BATTERY_MODE   1
 #define DATE_MODE      2
 #define BLUETOOTH_MODE 3
+#define REQUEST_CONFIG 100
 
 #define SECONDS_MODE_NEVER    0
 #define SECONDS_MODE_IFNOTLOW 1
@@ -61,6 +63,7 @@ static int seconds_mode   = SECONDS_MODE_ALWAYS;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
 static int date_mode      = DATE_MODE_ALWAYS;
 static int bluetooth_mode = BLUETOOTH_MODE_NEVER;
+static bool has_config = false;
 
 static Window *window;
 static Layer *background_layer;
@@ -271,17 +274,30 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
       case BATTERY_MODE:
         battery_mode = tuple->value->int32;
         break;
-        case DATE_MODE:
-          date_mode = tuple->value->int32;
-          break;
-        case BLUETOOTH_MODE:
-          bluetooth_mode = tuple->value->int32;
-          break;
+      case DATE_MODE:
+        date_mode = tuple->value->int32;
+        break;
+      case BLUETOOTH_MODE:
+        bluetooth_mode = tuple->value->int32;
+        break;
     }
     tuple = dict_read_next(received);
   }
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received config");
+  has_config = true;
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
+}
+
+void request_config(void) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting config");
+  Tuplet request_tuple = TupletInteger(REQUEST_CONFIG, 1);
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  if (!iter) return;
+  dict_write_tuplet(iter, &request_tuple);
+  dict_write_end(iter);
+  app_message_outbox_send();
 }
 
 
@@ -339,27 +355,35 @@ void handle_init() {
 
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
 
-  if (persist_exists(SECONDS_MODE)) seconds_mode = persist_read_int(SECONDS_MODE);
-  if (persist_exists(BATTERY_MODE)) battery_mode = persist_read_int(BATTERY_MODE);
-  if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE);
-  if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE);
+  has_config = true;
+  if (persist_exists(SECONDS_MODE)) seconds_mode = persist_read_int(SECONDS_MODE); else has_config = false;
+  if (persist_exists(BATTERY_MODE)) battery_mode = persist_read_int(BATTERY_MODE); else has_config = false;
+  if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE); else has_config = false;
+  if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE); else has_config = false;
+  if (has_config) APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded config");
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
   handle_battery(battery_state_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   handle_bluetooth(bluetooth_connection_service_peek());
   app_message_register_inbox_received(&handle_appmessage_receive);
-  app_message_open(64, 0);
+  app_message_open(64, 64);
+  if (!has_config) request_config();
 }
 
 void handle_deinit() {
   app_message_deregister_callbacks();
   battery_state_service_unsubscribe();
   tick_timer_service_unsubscribe();
-  persist_write_int(SECONDS_MODE, seconds_mode);
-  persist_write_int(BATTERY_MODE, battery_mode);
-  persist_write_int(DATE_MODE, date_mode);
-  persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
+  if (has_config) {
+    persist_write_int(SECONDS_MODE, seconds_mode);
+    persist_write_int(BATTERY_MODE, battery_mode);
+    persist_write_int(DATE_MODE, date_mode);
+    persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote config");
+  } else {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Did not write config");
+  }
   fonts_unload_custom_font(font);
   gpath_destroy(sec_path);
   gpath_destroy(min_path);

@@ -1,7 +1,7 @@
 {
   "uuid": "f6c1ad30-2e14-427a-b959-9442f3a46949",
   "shortName": "ONE",
-  "longName": "The ONE Watch Face",
+  "longName": "PebbleONE",
   "companyName": "Bert Freudenberg",
   "versionCode": 5,
   "versionLabel": "2.2.1",
@@ -15,7 +15,8 @@
     "seconds_mode": 0,
     "battery_mode": 1,
     "date_mode": 2,
-    "bluetooth_mode": 3
+    "bluetooth_mode": 3,
+    "request_config": 100
   },
   "resources": {
     "media": [

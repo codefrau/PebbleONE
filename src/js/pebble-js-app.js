@@ -43,14 +43,29 @@ var config = {
 // config.html will be included by build process, see build/src/js/pebble-js-app.js
 var config_html; 
 
+function send_config_to_pebble() {
+    console.log("sending config " + JSON.stringify(config)); 
+    Pebble.sendAppMessage(config,
+        function ack(e) { console.log("Successfully delivered message " + JSON.stringify(e.data)); },
+        function nack(e) { console.log("Unable to deliver message " + JSON.stringify(e)); });
+}
+
 // read config from persistent storage
 Pebble.addEventListener('ready',
     function () {
         var json = window.localStorage.getItem('config');
         if (typeof json === 'string') {
             config = JSON.parse(json);
+            console.log("loaded config " + JSON.stringify(config));
         }
-        console.log(JSON.stringify(config));
+    });
+
+// got message from pebble
+Pebble.addEventListener("appmessage",
+    function(e) {
+        console.log("got message " + JSON.stringify(e.payload));
+        if (e.payload.request_config)
+            send_config_to_pebble();
     });
 
 // open config window
@@ -65,11 +80,9 @@ Pebble.addEventListener('webviewclosed',
     function (e) {
         if (e.response && e.response.length) {
             config = JSON.parse(e.response);
-            console.log(JSON.stringify(config));
+            console.log("storing config " + e.response);
             window.localStorage.setItem('config', e.response);
-            Pebble.sendAppMessage(config,
-                function ack(e) { console.log("Successfully delivered message: " + JSON.stringify(e)); },
-                function nack(e) { console.log("Unable to deliver message: " + JSON.stringify(e)); });
+            send_config_to_pebble();
         }
     });
 
