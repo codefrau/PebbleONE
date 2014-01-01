@@ -23,8 +23,8 @@ def build(ctx):
     config_js  = ctx.path.get_bld().make_node('src/js/config.js')
     ctx(rule='(echo config_html= && sed "s/\'/\\\\\\\'/g;s/^/\\\'/;s/$/\\\' +/" ${SRC} && echo "\'\'") > ${TGT}', source=config_html, target=config_js)
 
-    # append config.js to pebble-js-app.js
-    src_js   = ctx.path.make_node('src/js/pebble-js-app.js')
+    # make pebble-js-app.js by appending config.js to pebble_one.js
+    src_js   = ctx.path.make_node('src/js/pebble_one.js')
     build_js  = ctx.path.get_bld().make_node('src/js/pebble-js-app.js')
     ctx(rule='cat ${SRC} > ${TGT}', source=[src_js, config_js], target=build_js)
 
