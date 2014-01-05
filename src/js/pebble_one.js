@@ -72,7 +72,7 @@ Pebble.addEventListener("appmessage",
 Pebble.addEventListener('showConfiguration',
     function () {
         var html = config_html.replace('__CONFIG__', JSON.stringify(config), 'g');
-        Pebble.openURL('data:text/html,' + encodeURI(html + '<!--.html'));
+        Pebble.openURL('data:text/html,' + encodeURIComponent(html + '<!--.html'));
     });
 
 // store config and send to watch
