@@ -4,62 +4,93 @@
     <meta name="viewport" content="width=device-width">
     <style>
     body {
-        background-color: rgb(100,100,100);
+        background-color: #777777;
         font-family: sans-serif;
     }
     div,form {
+        width: 280px;
         text-shadow: 0px 1px 1px white;
         padding: 10px;
         margin: 10px 0;
-        border: 1px solid rgb(50,50,50);
+        border: 1px solid #333333;
         border-radius: 10px;
-        background: linear-gradient(rgb(230,230,230), rgb(150,150,150));
+        background: #eeeeee;
+        text-shadow:1px 1px 0px #ffffff;
     }
-    div.center {text-align: center}
-    h1 {color: rgb(100,100,100); margin-top: 0, padding-top: 0;}
-    input,select {
-        background-color: rgb(128, 255, 0);
-        -webkit-transform: scale(1.8,1.8);
-        -webkit-transform-origin: 0% 0%;
-        width: 155px;
-    }
+    div.header {color: #666666; text-align: center; font-weight:bold; font-size:24px;}
+    p,a {color: #cccccc}
+    hr {clear: both}
     input {
-        float: right;
-        -webkit-transform-origin: 100% 100%;
+        display:none; 
+        margin:10px;
     }
-    p,a {color: rgb(200,200,200)}
+    input + label {
+        display:inline-block;
+        box-shadow: inset 0px 1px 0px 0px #ffffff;
+        background: linear-gradient(#eeeeee, #dddddd);
+        text-indent:0;
+        border:1px solid #cccccc;
+        display:inline-block;
+        color:#777777;
+        font-size:16px;
+        font-weight:bold;
+        text-align:center;
+        text-shadow:1px 1px 0px #ffffff;
+        margin: 5px 0;
+        padding: 10px 0;
+    }
+    input[type=submit] + label {
+        padding: 20px;
+        width: 235px;
+        font-size: 24px;
+    }
+    input[type=radio]:checked + label, input[type=submit] + label { 
+        background: linear-gradient(#5cb811, #77d42a);
+        box-shadow: inset 0px -1px 2px #ffffff;
+        color: #FFFFFF;
+        text-shadow:-1px -1px 0px #339933;
+    }
+    .left { border-radius: 10px 0 0 10px; width: 55px }
+    .right { border-radius: 0 10px 10px 0; width: 55px }
+    .middle {width: 160px }
+    .float {float: right}
     </style>
 </head>
 <body>
-    <div class="center">
-        <h1>ONE</h1>
-    </div>
-    <form onsubmit="return onSubmit(this)">
-        <select id="seconds_mode">
-        <option>Do not show seconds</option>
-        <option>No seconds if low battery</option>
-        <option>Always show seconds</option>
-        </select>
-        <br><br><br>
-        <select id="battery_mode">
-        <option>Do not show battery</option>
-        <option>Only show battery if low</option>
-        <option>Always show battery</option>
-        </select>
-        <br><br><br>
-        <select id="bluetooth_mode">
-        <option>Do not show bluetooth</option>
-        <option>Show bluetooth if disconnected</option>
-        <option>Always show bluetooth</option>
-        </select>
-        <br><br><br>
-        <select id="date_mode">
-        <option>Do not show date</option>
-        <option>Show date</option>
-        </select>
-        <br><br><br><br>
-        <input type="submit" value="Save">
-        <br><br>
+    <div class="header">ONE</div>
+    <form id="form" onsubmit="return onSubmit(this)">
+        Seconds hand:
+        <br>
+        <input
+            type="radio" id="seconds0" name="seconds_mode" value="0"><label for="seconds0" class="left">Off</label><input 
+            type="radio" id="seconds1" name="seconds_mode" value="1"><label for="seconds1" class="middle">Off if low battery</label><input
+            type="radio" id="seconds2" name="seconds_mode" value="2"><label for="seconds2" class="right">On</label>
+        <hr>
+        Battery display:
+        <br>
+        <input
+            type="radio" id="battery0" name="battery_mode" value="0"><label for="battery0" class="left">Off</label><input 
+            type="radio" id="battery1" name="battery_mode" value="1"><label for="battery1" class="middle">On if low battery</label><input
+            type="radio" id="battery2" name="battery_mode" value="2"><label for="battery2" class="right">On</label>
+        <hr>
+        Bluetooth display:
+        <br>
+        <input
+            type="radio" id="bluetooth0" name="bluetooth_mode" value="0"><label for="bluetooth0" class="left">Off</label><input 
+            type="radio" id="bluetooth1" name="bluetooth_mode" value="1"><label for="bluetooth1" class="middle">If disconnected</label><input
+            type="radio" id="bluetooth2" name="bluetooth_mode" value="2"><label for="bluetooth2" class="right">On</label>
+        <hr>
+        Date display:
+        <input
+            type="radio" id="date1" name="date_mode" value="1"><label for="date1" class="right float">On</label><input 
+            type="radio" id="date0" name="date_mode" value="0"><label for="date0" class="left float">Off</label>
+        <hr>
+        Invert colors:
+        <input
+            type="radio" id="graphics1" name="graphics_mode" value="1"><label for="graphics1" class="right float">On</label><input 
+            type="radio" id="graphics0" name="graphics_mode" value="0"><label for="graphics0" class="left float">Off</label>
+        <hr>
+        <input type="submit" id="save" value="Save"><label for="save">Save</label>
     </form>
     <p>
     This is an open source app: <a href="https://github.com/bertfreudenberg/PebbleONE">Here is the source code</a>.
@@ -68,17 +99,18 @@
     </p>
     <script>
         var config = JSON.parse('__CONFIG__');
-        document.getElementById("seconds_mode").options.selectedIndex = config.seconds_mode;
-        document.getElementById("battery_mode").options.selectedIndex = config.battery_mode;
-        document.getElementById("date_mode").options.selectedIndex = config.date_mode;
-        document.getElementById("bluetooth_mode").options.selectedIndex = config.bluetooth_mode;
+        for (var which in config) {
+            if (form[which]) for (var i in form[which]) {
+                var radio = form[which][i];
+                radio.checked = radio.value == config[which];
+            }
+        }
         function onSubmit(e) {
-            var result = {
-                seconds_mode: document.getElementById("seconds_mode").options.selectedIndex,
-                battery_mode: document.getElementById("battery_mode").options.selectedIndex,
-                date_mode: document.getElementById("date_mode").options.selectedIndex,
-                bluetooth_mode: document.getElementById("bluetooth_mode").options.selectedIndex,
-            };
+            var result = {};
+            var inputs = form.getElementsByTagName("input");
+            for (var i in inputs)
+                if (inputs[i].checked)
+                    result[inputs[i].name] = parseInt(inputs[i].value);
             window.location.href = "pebblejs://close#" + JSON.stringify(result);
             return false;
         }
