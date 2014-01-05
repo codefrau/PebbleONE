@@ -3,8 +3,8 @@
   "shortName": "ONE",
   "longName": "PebbleONE",
   "companyName": "Bert Freudenberg",
-  "versionCode": 7,
-  "versionLabel": "2.3.0",
+  "versionCode": 8,
+  "versionLabel": "2.3.1",
   "watchapp": {
     "watchface": true
   },
