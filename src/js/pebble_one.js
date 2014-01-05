@@ -32,12 +32,15 @@ var SECONDS_MODE_NEVER    = 0,
     BLUETOOTH_MODE_NEVER  = 0;
     BLUETOOTH_MODE_IFOFF  = 1;
     BLUETOOTH_MODE_ALWAYS = 2;
+    GRAPHICS_MODE_NORMAL  = 0;
+    GRAPHICS_MODE_INVERT  = 1;
 
 var config = {
     seconds_mode:   SECONDS_MODE_ALWAYS,
     battery_mode:   BATTERY_MODE_IF_LOW,
     date_mode:      DATE_MODE_ALWAYS,
     bluetooth_mode: BLUETOOTH_MODE_NEVER,
+    graphics_mode:  GRAPHICS_MODE_NORMAL,
 };
 
 // config.html will be included by build process, see build/src/js/pebble-js-app.js
