@@ -102,7 +102,7 @@
     <script>
         var config = JSON.parse('__CONFIG__');
         for (var which in config) {
-            if (form[which]) for (var i in form[which]) {
+            if (form[which]) for (var i = 0; i < form[which].length; i++) {
                 var radio = form[which][i];
                 radio.checked = radio.value == config[which];
             }
@@ -110,7 +110,7 @@
         function onSubmit(e) {
             var result = {};
             var inputs = form.getElementsByTagName("input");
-            for (var i in inputs)
+            for (var i = 0; i < inputs.length; i++)
                 if (inputs[i].checked)
                     result[inputs[i].name] = parseInt(inputs[i].value);
             window.location.href = "pebblejs://close#" + JSON.stringify(result);
