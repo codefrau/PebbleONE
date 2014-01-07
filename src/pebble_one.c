@@ -29,7 +29,11 @@
 #define DATE_MODE      2
 #define BLUETOOTH_MODE 3
 #define GRAPHICS_MODE  4
+#define CONNLOST_MODE  5
+#define INBOX_SIZE     (1 + (7+4) * 6)
+
 #define REQUEST_CONFIG 100
+#define OUTBOX_SIZE    (1 + (7+4) * 1)
 
 #define SECONDS_MODE_NEVER    0
 #define SECONDS_MODE_IFNOTLOW 1
@@ -44,6 +48,8 @@
 #define BLUETOOTH_MODE_ALWAYS 2
 #define GRAPHICS_MODE_NORMAL  0
 #define GRAPHICS_MODE_INVERT  1
+#define CONNLOST_MODE_IGNORE  0
+#define CONNLOST_MODE_WARN    1
 
 
 #define SCREENSHOT 0
@@ -68,6 +74,7 @@ static int battery_mode   = BATTERY_MODE_IF_LOW;
 static int date_mode      = DATE_MODE_ALWAYS;
 static int bluetooth_mode = BLUETOOTH_MODE_NEVER;
 static int graphics_mode  = GRAPHICS_MODE_NORMAL;
+static int connlost_mode  = CONNLOST_MODE_IGNORE;
 static bool has_config = false;
 
 static Window *window;
@@ -90,6 +97,7 @@ static struct tm *now = NULL;
 static int date_wday = -1;
 static int date_mday = -1;
 static bool hide_seconds = false;
+static bool was_connected = true;
 
 static GFont *font;
 #define DATE_BUFFER_BYTES 32
@@ -230,11 +238,31 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(date_layer);
 }
 
+void lost_connection_warning(void *);
+
 void handle_bluetooth(bool connected) {
   bitmap_layer_set_bitmap(bluetooth_layer, bluetooth_images[connected ? 1 : 0]);
   layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer),
     bluetooth_mode == BLUETOOTH_MODE_NEVER ||
     (bluetooth_mode == BLUETOOTH_MODE_IFOFF && connected));
+  if (was_connected && !connected && connlost_mode == CONNLOST_MODE_WARN)
+      lost_connection_warning((void*) 0);
+  was_connected = connected;
+}
+
+void lost_connection_warning(void *data) {
+  int count = (int) data;
+  bool on_off = count & 1;
+  // blink icon
+  bitmap_layer_set_bitmap(bluetooth_layer, bluetooth_images[on_off ? 1 : 0]);
+  layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer), false);
+  // buzz 3 times
+  if (count < 6 && !on_off)
+    vibes_short_pulse();
+  if (count < 50) // blink for 15 seconds
+    app_timer_register(300, lost_connection_warning, (void*) (count+1));
+  else // restore bluetooth icon
+    handle_bluetooth(bluetooth_connection_service_peek());
 }
 
 void handle_battery(BatteryChargeState charge_state) {
@@ -271,8 +299,7 @@ void handle_battery(BatteryChargeState charge_state) {
   }
 }
 
-void handle_inverter()
-{
+void handle_inverter() {
   if (layer_get_hidden(inverter_layer_get_layer(inverter_layer)) != (graphics_mode == GRAPHICS_MODE_NORMAL))
     layer_set_hidden(inverter_layer_get_layer(inverter_layer), graphics_mode == GRAPHICS_MODE_NORMAL);
 }
@@ -295,6 +322,9 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
         break;
       case GRAPHICS_MODE:
         graphics_mode = tuple->value->int32;
+        break;
+      case CONNLOST_MODE:
+        connlost_mode = tuple->value->int32;
         break;
     }
     tuple = dict_read_next(received);
@@ -388,7 +418,7 @@ void handle_init() {
   handle_bluetooth(bluetooth_connection_service_peek());
   handle_inverter();
   app_message_register_inbox_received(&handle_appmessage_receive);
-  app_message_open(64, 64);
+  app_message_open(INBOX_SIZE, OUTBOX_SIZE);
   if (!has_config) request_config();
 }
 
@@ -409,6 +439,7 @@ void handle_deinit() {
   gpath_destroy(sec_path);
   gpath_destroy(min_path);
   gpath_destroy(hour_path);
+  inverter_layer_destroy(inverter_layer);
 #if DEBUG
   text_layer_destroy(debug_layer);
 #endif

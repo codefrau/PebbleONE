@@ -17,6 +17,7 @@
     "date_mode": 2,
     "bluetooth_mode": 3,
     "graphics_mode": 4,
+    "connlost_mode": 5,
     "request_config": 100
   },
   "resources": {
