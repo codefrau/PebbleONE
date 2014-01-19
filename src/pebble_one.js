@@ -26,15 +26,15 @@ var SECONDS_MODE_NEVER    = 0,
     SECONDS_MODE_ALWAYS   = 2,
     BATTERY_MODE_NEVER    = 0,
     BATTERY_MODE_IF_LOW   = 1,
-    BATTERY_MODE_ALWAYS   = 2;
+    BATTERY_MODE_ALWAYS   = 2,
     DATE_MODE_NEVER       = 0,
-    DATE_MODE_ALWAYS      = 1;
-    BLUETOOTH_MODE_NEVER  = 0;
-    BLUETOOTH_MODE_IFOFF  = 1;
-    BLUETOOTH_MODE_ALWAYS = 2;
-    GRAPHICS_MODE_NORMAL  = 0;
-    GRAPHICS_MODE_INVERT  = 1;
-    CONNLOST_MODE_IGNORE  = 0;
+    DATE_MODE_ALWAYS      = 1,
+    BLUETOOTH_MODE_NEVER  = 0,
+    BLUETOOTH_MODE_IFOFF  = 1,
+    BLUETOOTH_MODE_ALWAYS = 2,
+    GRAPHICS_MODE_NORMAL  = 0,
+    GRAPHICS_MODE_INVERT  = 1,
+    CONNLOST_MODE_IGNORE  = 0,
     CONNLOST_MODE_WARN    = 1;
 
 var config = {
@@ -70,8 +70,9 @@ Pebble.addEventListener('ready',
 Pebble.addEventListener("appmessage",
     function(e) {
         console.log("got message " + JSON.stringify(e.payload));
-        if (e.payload.request_config)
+        if (e.payload.request_config) {
             send_config_to_pebble();
+        }
     });
 
 // open config window
