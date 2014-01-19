@@ -4,20 +4,16 @@
     <meta name="viewport" content="width=device-width">
     <style>
     body {
-        background-color: #777777;
-        font-family: sans-serif;
+        background: #444;
+        color: #FFF;
+        font-family: sans-serif, HelveticaNeue-Light, sans-serif;
     }
-    div,form {
-        width: 280px;
-        text-shadow: 0px 1px 1px white;
-        padding: 10px;
-        margin: 10px 0;
-        border: 1px solid #333333;
-        border-radius: 10px;
-        background: #eeeeee;
-        text-shadow:1px 1px 1px #ffffff;
+    form {
+        width: 300px;
+        margin-left: auto;
+        margin-right: auto;
     }
-    p,a {color: #cccccc}
+    p,a {color: #ccc}
     hr {clear: both; margin: 5px 0}
     input {
         display:none; 
@@ -25,36 +21,28 @@
     }
     input + label {
         display:inline-block;
-        box-shadow: inset 0px 1px 0px 0px #ffffff;
-        background: #eeeeee;
-        background-image: linear-gradient(#eeeeee, #dddddd);
+        color: #ccc;
         text-indent:0;
-        border:1px solid #cccccc;
+        border:1px solid #FF4700;
         display:inline-block;
-        color:#777777;
         font-size:16px;
-        font-weight:bold;
         text-align:center;
-        text-shadow:1px 1px 1px #ffffff;
         margin: 2px 0 2px 0;
         padding: 10px 0;
     }
     input[type=submit] + label {
         padding: 10px 0;
-        width: 280px;
+        width: 100%;
         font-size: 32px;
-        border-radius: 20px;
+        border-radius: 30px;
     }
     input[type=radio]:checked + label, input[type=submit] + label { 
-        background: #5cb811;
-        background-image: linear-gradient(#5cb811, #77d42a);
-        box-shadow: inset 0px -1px 2px #ffffff;
-        color: #FFFFFF;
-        text-shadow: 1px 1px 1px #339933;
+        background: #FF4700;
+        color: #FFF;
     }
-    .left { border-radius: 10px 0 0 10px; width: 55px }
-    .right { border-radius: 0 10px 10px 0; width: 55px }
-    .middle {width: 160px }
+    .left { border-radius: 20px 0 0 20px; border-right: 0; width: 70px }
+    .right { border-radius: 0 20px 20px 0; width: 70px }
+    .middle {border-right: 0; width: 156px }
     .float {float: right; width: 70px}
     </style>
 </head>
@@ -92,17 +80,17 @@
         Color<br>scheme:
         <hr>
         <input
-            type="radio" id="connlost1" name="connlost_mode" value="1"><label for="connlost1" class="right float">Buzz</label><input 
+            type="radio" id="connlost1" name="connlost_mode" value="1"><label for="connlost1" class="right float">Vibrate</label><input 
             type="radio" id="connlost0" name="connlost_mode" value="0"><label for="connlost0" class="left float">Ignore</label>
         If lost phone<br>connection:
         <hr>
         <input type="submit" id="save" value="Save"><label for="save">Save</label>
+        <p>
+        This is an open source app: <a href="https://github.com/bertfreudenberg/PebbleONE">Here is the source code</a>.
+        Contributions are highly welcome!<br>
+        -- Bert Freudenberg, January 2014
+        </p>
     </form>
-    <p>
-    This is an open source app: <a href="https://github.com/bertfreudenberg/PebbleONE">Here is the source code</a>.
-    Contributions are highly welcome!<br>
-    -- Bert Freudenberg, December 2013
-    </p>
     <script>
         var config = JSON.parse('"REPLACE_ME_AT_RUNTIME"');
         for (var which in config) {
