@@ -41,7 +41,7 @@ var config = {
     seconds_mode:   SECONDS_MODE_ALWAYS,
     battery_mode:   BATTERY_MODE_IF_LOW,
     date_mode:      DATE_MODE_ALWAYS,
-    bluetooth_mode: BLUETOOTH_MODE_NEVER,
+    bluetooth_mode: BLUETOOTH_MODE_ALWAYS,
     graphics_mode:  GRAPHICS_MODE_NORMAL,
     connlost_mode:  CONNLOST_MODE_IGNORE,
 };
