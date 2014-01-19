@@ -9,7 +9,7 @@
         font-family: sans-serif, HelveticaNeue-Light, sans-serif;
     }
     p,a {color: #ccc}
-    hr {clear: both; margin: 5px 0}
+    hr {clear: both; margin: 10px 0}
     input {
         display:none; 
         margin:10px;
@@ -17,9 +17,7 @@
     input + label {
         display:inline-block;
         color: #ccc;
-        text-indent:0;
         border:1px solid #FF4700;
-        display:inline-block;
         font-size:16px;
         text-align:center;
         margin: 2px 0 2px 0;
@@ -34,16 +32,19 @@
         background: #FF4700;
         color: #FFF;
     }
-    .left { border-radius: 20px 0 0 20px; border-right: 0; width: 70px }
-    .right { border-radius: 0 20px 20px 0; width: 70px }
-    .middle {border-right: 0; width: 156px }
-    .float {float: right; width: 70px}
+    .left { border-radius: 20px 0 0 20px; border-right: 0; width: 70px}
+    .mid {border-right: 0}
+    .right { border-radius: 0 20px 20px 0; width: 70px}
+    .triple {width: 65px}
+    .middle {width: 150px}
+    .narrow {width: 46px}
+    .flushright {float: right; margin-bottom: 10px}
     .center {
         width: 300px;
         margin-left: auto;
         margin-right: auto;
     }
-    #save_button_placeholder + label { visibility: hidden; }
+    #save_button_placeholder + label {visibility: hidden;}
     #save_button_background {
         position: fixed;
         bottom: 0;
@@ -51,51 +52,59 @@
         right: 0;
         padding: 10px;
         background: #333;
-        box-shadow: 0px -4px 10px #111;
+        box-shadow: #000 0 0 20px 10px;
     }
     </style>
 </head>
 <body>
     <form id="form" class="center" onsubmit="return onSubmit(this)">
         Seconds hand:
-        <br>
-        <input
-            type="radio" id="seconds0" name="seconds_mode" value="0"><label for="seconds0" class="left">Off</label><input 
-            type="radio" id="seconds1" name="seconds_mode" value="1"><label for="seconds1" class="middle">Off if low battery</label><input
-            type="radio" id="seconds2" name="seconds_mode" value="2"><label for="seconds2" class="right">On</label>
+        <div class="flushright">
+            <input
+                type="radio" id="seconds0" name="seconds_mode" value="0"><label for="seconds0" class="left triple">Off</label><input 
+                type="radio" id="seconds1" name="seconds_mode" value="1"><label for="seconds1" class="mid middle">Off if low battery</label><input
+                type="radio" id="seconds2" name="seconds_mode" value="2"><label for="seconds2" class="right triple">On</label>
+        </div>
         <hr>
         Battery indicator:
-        <br>
-        <input
-            type="radio" id="battery0" name="battery_mode" value="0"><label for="battery0" class="left">Off</label><input 
-            type="radio" id="battery1" name="battery_mode" value="1"><label for="battery1" class="middle">If battery is low</label><input
-            type="radio" id="battery2" name="battery_mode" value="2"><label for="battery2" class="right">On</label>
+        <div class="flushright">
+            <input
+                type="radio" id="battery0" name="battery_mode" value="0"><label for="battery0" class="left triple">Off</label><input 
+                type="radio" id="battery1" name="battery_mode" value="1"><label for="battery1" class="mid middle">If battery is low</label><input
+                type="radio" id="battery2" name="battery_mode" value="2"><label for="battery2" class="right triple">On</label>
+        </div>
         <hr>
         Bluetooth indicator:
-        <br>
-        <input
-            type="radio" id="bluetooth0" name="bluetooth_mode" value="0"><label for="bluetooth0" class="left">Off</label><input 
-            type="radio" id="bluetooth1" name="bluetooth_mode" value="1"><label for="bluetooth1" class="middle">If disconnected</label><input
-            type="radio" id="bluetooth2" name="bluetooth_mode" value="2"><label for="bluetooth2" class="right">On</label>
+        <div class="flushright">
+            <input
+                type="radio" id="bluetooth0" name="bluetooth_mode" value="0"><label for="bluetooth0" class="left triple">Off</label><input 
+                type="radio" id="bluetooth1" name="bluetooth_mode" value="1"><label for="bluetooth1" class="mid middle">If disconnected</label><input
+                type="radio" id="bluetooth2" name="bluetooth_mode" value="2"><label for="bluetooth2" class="right triple">On</label>
+        </div>
         <hr>
-        <input
-            type="radio" id="date1" name="date_mode" value="1"><label for="date1" class="right float">Show</label><input 
-            type="radio" id="date0" name="date_mode" value="0"><label for="date0" class="left float">Hide</label>
-        Week day<br>and date:
+        Date display and language:
+        <div class="flushright">
+            <input
+                type="radio" id="date0" name="date_mode" value="0"><label for="date0" class="left narrow">Off</label><input 
+                type="radio" id="date1" name="date_mode" value="1"><label for="date1" class="mid narrow">EN</label><input 
+                type="radio" id="date2" name="date_mode" value="2"><label for="date2" class="mid narrow">DE</label><input 
+                type="radio" id="date3" name="date_mode" value="3"><label for="date3" class="mid narrow">ES</label><input 
+                type="radio" id="date4" name="date_mode" value="4"><label for="date4" class="mid narrow">FR</label><input 
+                type="radio" id="date5" name="date_mode" value="5"><label for="date5" class="right narrow">IT</label>
+        </div>
         <hr>
-        <input
-            type="radio" id="locale1" name="locale_mode" value="1"><label for="locale1" class="right float">Deutsch</label><input 
-            type="radio" id="locale0" name="locale_mode" value="0"><label for="locale0" class="left float">English</label>
-        Week day<br>language:
-        <hr>
-        <input
-            type="radio" id="graphics1" name="graphics_mode" value="1"><label for="graphics1" class="right float">White</label><input 
-            type="radio" id="graphics0" name="graphics_mode" value="0"><label for="graphics0" class="left float">Black</label>
+        <div class="flushright">
+            <input
+                type="radio" id="graphics0" name="graphics_mode" value="0"><label for="graphics0" class="left">Black</label><input 
+                type="radio" id="graphics1" name="graphics_mode" value="1"><label for="graphics1" class="right">White</label>
+        </div>
         Color<br>scheme:
         <hr>
-        <input
-            type="radio" id="connlost1" name="connlost_mode" value="1"><label for="connlost1" class="right float">Vibrate</label><input 
-            type="radio" id="connlost0" name="connlost_mode" value="0"><label for="connlost0" class="left float">Ignore</label>
+        <div class="flushright">
+            <input
+                type="radio" id="connlost0" name="connlost_mode" value="0"><label for="connlost0" class="left">Ignore</label><input 
+                type="radio" id="connlost1" name="connlost_mode" value="1"><label for="connlost1" class="right">Vibrate</label>
+        </div>
         If lost phone<br>connection:
         <hr>
         <p>

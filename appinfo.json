@@ -18,7 +18,6 @@
     "bluetooth_mode": 3,
     "graphics_mode": 4,
     "connlost_mode": 5,
-    "locale_mode": 6,
     "request_config": 100
   },
   "resources": {
@@ -53,7 +52,7 @@
         "type": "font",
         "name": "FONT_30",
         "file": "fonts/VarelaRound-Regular.ttf",
-        "characterRegex":"[0-9A-Za-z ]"
+        "characterRegex": "[0-9A-Za-z éá]"
       }
     ]
   }

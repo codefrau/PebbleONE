@@ -30,8 +30,7 @@
 #define BLUETOOTH_MODE 3
 #define GRAPHICS_MODE  4
 #define CONNLOST_MODE  5
-#define LOCALE_MODE    6
-#define INBOX_SIZE     (1 + (7+4) * 7)
+#define INBOX_SIZE     (1 + (7+4) * 6)
 
 #define REQUEST_CONFIG 100
 #define OUTBOX_SIZE    (1 + (7+4) * 1)
@@ -42,8 +41,14 @@
 #define BATTERY_MODE_NEVER    0
 #define BATTERY_MODE_IF_LOW   1
 #define BATTERY_MODE_ALWAYS   2
-#define DATE_MODE_NEVER       0
-#define DATE_MODE_ALWAYS      1
+#define DATE_MODE_OFF         0
+#define DATE_MODE_FIRST       1
+#define DATE_MODE_EN          1
+#define DATE_MODE_DE          2
+#define DATE_MODE_ES          3
+#define DATE_MODE_FR          4
+#define DATE_MODE_IT          5
+#define DATE_MODE_LAST        5
 #define BLUETOOTH_MODE_NEVER  0
 #define BLUETOOTH_MODE_IFOFF  1
 #define BLUETOOTH_MODE_ALWAYS 2
@@ -51,9 +56,6 @@
 #define GRAPHICS_MODE_INVERT  1
 #define CONNLOST_MODE_IGNORE  0
 #define CONNLOST_MODE_WARN    1
-#define LOCALE_MODE_EN        0
-#define LOCALE_MODE_DE        1
-#define LOCALE_MODE_COUNT     2
 
 
 #define SCREENSHOT 0
@@ -75,11 +77,10 @@
 
 static int seconds_mode   = SECONDS_MODE_ALWAYS;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
-static int date_mode      = DATE_MODE_ALWAYS;
+static int date_mode      = DATE_MODE_EN;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
 static int graphics_mode  = GRAPHICS_MODE_NORMAL;
 static int connlost_mode  = CONNLOST_MODE_IGNORE;
-static int locale_mode    = LOCALE_MODE_EN;
 static bool has_config = false;
 
 static Window *window;
@@ -153,10 +154,10 @@ static GPath *sec_path;
 
 const char WEEKDAY_NAMES[5][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating 0
   {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
-  {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
-  {"dom", "lun", "mar", "mié", "jue", "vie", "sáb"},
-  {"dim", "lun", "mar", "mer", "jeu", "ven", "sam"},
-  {"dom", "lun", "mar", "mer", "gio", "ven", "sab"},
+  {"So",  "Mo",  "Di",  "Mi",  "Do",  "Fr",  "Sa" },
+  {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"},
+  {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
+  {"Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"},
 };
 
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
@@ -222,10 +223,10 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 
   // weekday
   //strftime(date_buffer, DATE_BUFFER_BYTES, "%a", now);
-  if (locale_mode < 0 || locale_mode >= LOCALE_MODE_COUNT)
-    locale_mode = LOCALE_MODE_EN;
+  if (date_mode <= DATE_MODE_FIRST || date_mode >= DATE_MODE_LAST)
+    date_mode = DATE_MODE_FIRST;
   graphics_draw_text(ctx,
-    WEEKDAY_NAMES[locale_mode][now->tm_wday],
+    WEEKDAY_NAMES[date_mode - DATE_MODE_FIRST][now->tm_wday],
     font,
     GRect(0, -6, 144, 32),
     GTextOverflowModeWordWrap,
@@ -249,7 +250,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   now = tick_time;
   layer_mark_dirty(hands_layer);
-  if (date_mode != DATE_MODE_NEVER && (now->tm_wday != date_wday || now->tm_mday != date_mday))
+  if (date_mode != DATE_MODE_OFF && (now->tm_wday != date_wday || now->tm_mday != date_mday))
     layer_mark_dirty(date_layer);
 }
 
@@ -290,7 +291,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bitmap_layer_set_bitmap(battery_layer, battery_images[1]);
   bool showSeconds = seconds_mode != SECONDS_MODE_NEVER;
   bool showBattery = battery_mode != BATTERY_MODE_NEVER;
-  bool showDate = date_mode != DATE_MODE_NEVER;
+  bool showDate = date_mode != DATE_MODE_OFF;
 #else
   bitmap_layer_set_bitmap(battery_layer, battery_images[
     (charge_state.is_charging ? 11 : 0) + min(charge_state.charge_percent / 10, 10)]);
@@ -300,7 +301,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
-  bool showDate = date_mode != DATE_MODE_NEVER;
+  bool showDate = date_mode != DATE_MODE_OFF;
 #endif
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
@@ -340,9 +341,6 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
         break;
       case CONNLOST_MODE:
         connlost_mode = tuple->value->int32;
-        break;
-      case LOCALE_MODE:
-        locale_mode = tuple->value->int32;
         break;
     }
     tuple = dict_read_next(received);
@@ -429,7 +427,6 @@ void handle_init() {
   if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE); else has_config = false;
   if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE); else has_config = false;
   if (persist_exists(CONNLOST_MODE)) connlost_mode = persist_read_int(CONNLOST_MODE); else has_config = false;
-  if (persist_exists(LOCALE_MODE)) locale_mode = persist_read_int(LOCALE_MODE); else has_config = false;
   if (has_config) APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded config");
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
@@ -452,7 +449,6 @@ void handle_deinit() {
     persist_write_int(DATE_MODE, date_mode);
     persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
     persist_write_int(CONNLOST_MODE, connlost_mode);
-    persist_write_int(LOCALE_MODE, locale_mode);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote config");
   } else {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Did not write config");
