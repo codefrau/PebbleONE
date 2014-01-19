@@ -278,7 +278,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bool showDate = date_mode != DATE_MODE_NEVER;
 #else
   bitmap_layer_set_bitmap(battery_layer, battery_images[
-    (charge_state.is_charging ? 11 : 0) + min(charge_state.charge_percent / 9, 10)]); // 90% is max
+    (charge_state.is_charging ? 11 : 0) + min(charge_state.charge_percent / 10, 10)]);
   bool battery_is_low = charge_state.charge_percent <= 10;
   bool showSeconds = seconds_mode == SECONDS_MODE_ALWAYS
     || (seconds_mode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
