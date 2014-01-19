@@ -18,6 +18,7 @@
     "bluetooth_mode": 3,
     "graphics_mode": 4,
     "connlost_mode": 5,
+    "locale_mode": 6,
     "request_config": 100
   },
   "resources": {

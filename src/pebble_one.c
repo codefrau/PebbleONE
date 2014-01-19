@@ -30,7 +30,8 @@
 #define BLUETOOTH_MODE 3
 #define GRAPHICS_MODE  4
 #define CONNLOST_MODE  5
-#define INBOX_SIZE     (1 + (7+4) * 6)
+#define LOCALE_MODE    6
+#define INBOX_SIZE     (1 + (7+4) * 7)
 
 #define REQUEST_CONFIG 100
 #define OUTBOX_SIZE    (1 + (7+4) * 1)
@@ -50,6 +51,9 @@
 #define GRAPHICS_MODE_INVERT  1
 #define CONNLOST_MODE_IGNORE  0
 #define CONNLOST_MODE_WARN    1
+#define LOCALE_MODE_EN        0
+#define LOCALE_MODE_DE        1
+#define LOCALE_MODE_COUNT     2
 
 
 #define SCREENSHOT 0
@@ -75,6 +79,7 @@ static int date_mode      = DATE_MODE_ALWAYS;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
 static int graphics_mode  = GRAPHICS_MODE_NORMAL;
 static int connlost_mode  = CONNLOST_MODE_IGNORE;
+static int locale_mode    = LOCALE_MODE_EN;
 static bool has_config = false;
 
 static Window *window;
@@ -146,6 +151,14 @@ const GPathInfo SEC_POINTS = {
 };
 static GPath *sec_path;
 
+const char WEEKDAY_NAMES[5][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating 0
+  {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
+  {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
+  {"dom", "lun", "mar", "mié", "jue", "vie", "sáb"},
+  {"dim", "lun", "mar", "mer", "jeu", "ven", "sam"},
+  {"dom", "lun", "mar", "mer", "gio", "ven", "sab"},
+};
+
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
 	graphics_context_set_fill_color(ctx, GColorWhite);
   for (int32_t angle = 0; angle < THREESIXTY; angle += THREESIXTY / 12) {
@@ -208,9 +221,11 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorWhite);
 
   // weekday
-  strftime(date_buffer, DATE_BUFFER_BYTES, "%a", now);
+  //strftime(date_buffer, DATE_BUFFER_BYTES, "%a", now);
+  if (locale_mode < 0 || locale_mode >= LOCALE_MODE_COUNT)
+    locale_mode = LOCALE_MODE_EN;
   graphics_draw_text(ctx,
-    date_buffer,
+    WEEKDAY_NAMES[locale_mode][now->tm_wday],
     font,
     GRect(0, -6, 144, 32),
     GTextOverflowModeWordWrap,
@@ -326,6 +341,9 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
       case CONNLOST_MODE:
         connlost_mode = tuple->value->int32;
         break;
+      case LOCALE_MODE:
+        locale_mode = tuple->value->int32;
+        break;
     }
     tuple = dict_read_next(received);
   }
@@ -410,6 +428,8 @@ void handle_init() {
   if (persist_exists(BATTERY_MODE)) battery_mode = persist_read_int(BATTERY_MODE); else has_config = false;
   if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE); else has_config = false;
   if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE); else has_config = false;
+  if (persist_exists(CONNLOST_MODE)) connlost_mode = persist_read_int(CONNLOST_MODE); else has_config = false;
+  if (persist_exists(LOCALE_MODE)) locale_mode = persist_read_int(LOCALE_MODE); else has_config = false;
   if (has_config) APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded config");
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
@@ -431,6 +451,8 @@ void handle_deinit() {
     persist_write_int(BATTERY_MODE, battery_mode);
     persist_write_int(DATE_MODE, date_mode);
     persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
+    persist_write_int(CONNLOST_MODE, connlost_mode);
+    persist_write_int(LOCALE_MODE, locale_mode);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote config");
   } else {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Did not write config");
