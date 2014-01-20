@@ -93,9 +93,10 @@ Pebble.addEventListener('showConfiguration',
 Pebble.addEventListener('webviewclosed',
     function (e) {
         if (e.response && e.response.length) {
-            config = JSON.parse(e.response);
-            console.log("storing config " + e.response);
-            window.localStorage.setItem('config', e.response);
+            var json = decodeURIComponent(e.response);
+            config = JSON.parse(json);
+            console.log("storing config " + json);
+            window.localStorage.setItem('config', json);
             send_config_to_pebble();
         }
     });

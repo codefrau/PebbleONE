@@ -121,7 +121,7 @@
         </div>
     </form>
     <script>
-        var config = JSON.parse('"REPLACE_ME_AT_RUNTIME"');
+        var config = JSON.parse(decodeURIComponent('"REPLACE_ME_AT_RUNTIME"'));
         for (var which in config) {
             if (form[which]) for (var i = 0; i < form[which].length; i++) {
                 var radio = form[which][i];
@@ -134,7 +134,7 @@
             for (var i = 0; i < inputs.length; i++)
                 if (inputs[i].checked)
                     result[inputs[i].name] = parseInt(inputs[i].value);
-            window.location.href = "pebblejs://close#" + JSON.stringify(result);
+            window.location.href = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
             return false;
         }
     </script>
