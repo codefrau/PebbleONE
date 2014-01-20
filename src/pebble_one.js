@@ -53,14 +53,28 @@ var config = {
     connlost_mode:  CONNLOST_MODE_IGNORE,
 };
 
+var send_in_progress = false;
+
 // config.html will be included by build process, see build/src/js/pebble-js-app.js
 var config_html; 
 
 function send_config_to_pebble() {
+    if (send_in_progress) {
+        return console.log("cannot send config, already in progress");
+    }
+    send_in_progress = true;
     console.log("sending config " + JSON.stringify(config)); 
+    window.localStorage.setItem('pebbleNeedsConfig', 'true');
     Pebble.sendAppMessage(config,
-        function ack(e) { console.log("Successfully delivered message " + JSON.stringify(e.data)); },
-        function nack(e) { console.log("Unable to deliver message " + JSON.stringify(e)); });
+        function ack(e) {
+            console.log("Successfully delivered message " + JSON.stringify(e.data));
+            send_in_progress = false;
+            window.localStorage.removeItem('pebbleNeedsConfig');
+        },
+        function nack(e) {
+            console.log("Unable to deliver message " + JSON.stringify(e));
+            send_in_progress = false;
+        });
 }
 
 // read config from persistent storage
@@ -70,6 +84,9 @@ Pebble.addEventListener('ready',
         if (typeof json === 'string') {
             config = JSON.parse(json);
             console.log("loaded config " + JSON.stringify(config));
+        }
+        if (window.localStorage.getItem('pebbleNeedsConfig')) {
+            send_config_to_pebble();
         }
     });
 
