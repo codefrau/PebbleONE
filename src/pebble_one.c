@@ -426,6 +426,7 @@ void handle_init() {
   if (persist_exists(BATTERY_MODE)) battery_mode = persist_read_int(BATTERY_MODE); else has_config = false;
   if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE); else has_config = false;
   if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE); else has_config = false;
+  if (persist_exists(GRAPHICS_MODE)) graphics_mode = persist_read_int(GRAPHICS_MODE); else has_config = false;
   if (persist_exists(CONNLOST_MODE)) connlost_mode = persist_read_int(CONNLOST_MODE); else has_config = false;
   if (has_config) APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded config");
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
@@ -448,6 +449,7 @@ void handle_deinit() {
     persist_write_int(BATTERY_MODE, battery_mode);
     persist_write_int(DATE_MODE, date_mode);
     persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
+    persist_write_int(GRAPHICS_MODE, graphics_mode);
     persist_write_int(CONNLOST_MODE, connlost_mode);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote config");
   } else {

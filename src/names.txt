@@ -1,0 +1,7 @@
+[
+{lang: 'English', days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]},
+{lang: 'Deutsch', days: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]},
+{lang: 'español', days: ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"]},
+{lang: 'français', days: ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"]},
+{lang: 'italiano', days: ["dom", "lun", "mar", "mer", "gio", "ven", "sab"]},
+]
