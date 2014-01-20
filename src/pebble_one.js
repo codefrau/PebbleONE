@@ -102,6 +102,7 @@ Pebble.addEventListener("appmessage",
 // open config window
 Pebble.addEventListener('showConfiguration',
     function () {
+        console.log("show config window " + JSON.stringify(config));
         var html = config_html.replace('"REPLACE_ME_AT_RUNTIME"', JSON.stringify(config), 'g');
         Pebble.openURL('data:text/html,' + encodeURIComponent(html + '<!--.html'));
     });
