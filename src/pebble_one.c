@@ -350,6 +350,8 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
   handle_inverter();
+  layer_mark_dirty(hands_layer);
+  layer_mark_dirty(date_layer);
 }
 
 void request_config(void) {
