@@ -223,7 +223,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 
   // weekday
   //strftime(date_buffer, DATE_BUFFER_BYTES, "%a", now);
-  if (date_mode <= DATE_MODE_FIRST || date_mode >= DATE_MODE_LAST)
+  if (date_mode < DATE_MODE_FIRST || date_mode > DATE_MODE_LAST)
     date_mode = DATE_MODE_FIRST;
   graphics_draw_text(ctx,
     WEEKDAY_NAMES[date_mode - DATE_MODE_FIRST][now->tm_wday],
