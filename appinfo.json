@@ -4,7 +4,7 @@
   "longName": "PebbleONE",
   "companyName": "Bert Freudenberg",
   "versionCode": 10,
-  "versionLabel": "2.5.0",
+  "versionLabel": "2.5.1",
   "watchapp": {
     "watchface": true
   },
