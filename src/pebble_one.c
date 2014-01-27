@@ -48,7 +48,8 @@
 #define DATE_MODE_ES          3
 #define DATE_MODE_FR          4
 #define DATE_MODE_IT          5
-#define DATE_MODE_LAST        5
+#define DATE_MODE_SE          6
+#define DATE_MODE_LAST        6
 #define BLUETOOTH_MODE_NEVER  0
 #define BLUETOOTH_MODE_IFOFF  1
 #define BLUETOOTH_MODE_ALWAYS 2
