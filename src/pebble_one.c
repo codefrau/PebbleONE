@@ -159,6 +159,7 @@ const char WEEKDAY_NAMES[5][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating
   {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"},
   {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
   {"Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"},
+  {"Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"},
 };
 
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
