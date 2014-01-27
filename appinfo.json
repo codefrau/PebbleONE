@@ -3,7 +3,7 @@
   "shortName": "ONE",
   "longName": "PebbleONE",
   "companyName": "Bert Freudenberg",
-  "versionCode": 10,
+  "versionCode": 11,
   "versionLabel": "2.5.1",
   "watchapp": {
     "watchface": true
@@ -52,7 +52,7 @@
         "type": "font",
         "name": "FONT_30",
         "file": "fonts/VarelaRound-Regular.ttf",
-        "characterRegex": "[0-9A-Za-z éá]"
+        "characterRegex": "[0-9A-Za-z éáåäö]"
       }
     ]
   }
