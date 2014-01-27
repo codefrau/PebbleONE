@@ -33,6 +33,7 @@ var SECONDS_MODE_NEVER    = 0,
     DATE_MODE_ES          = 3,
     DATE_MODE_FR          = 4,
     DATE_MODE_IT          = 5,
+    DATE_MODE_SWE         = 6,
     BLUETOOTH_MODE_NEVER  = 0,
     BLUETOOTH_MODE_IFOFF  = 1,
     BLUETOOTH_MODE_ALWAYS = 2,
@@ -99,4 +100,3 @@ Pebble.addEventListener('webviewclosed',
             send_config_to_pebble();
         }
     });
-
