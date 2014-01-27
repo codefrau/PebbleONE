@@ -48,7 +48,8 @@
 #define DATE_MODE_ES          3
 #define DATE_MODE_FR          4
 #define DATE_MODE_IT          5
-#define DATE_MODE_LAST        5
+#define DATE_MODE_SE          6
+#define DATE_MODE_LAST        6
 #define BLUETOOTH_MODE_NEVER  0
 #define BLUETOOTH_MODE_IFOFF  1
 #define BLUETOOTH_MODE_ALWAYS 2
@@ -152,12 +153,13 @@ const GPathInfo SEC_POINTS = {
 };
 static GPath *sec_path;
 
-const char WEEKDAY_NAMES[5][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating 0
+const char WEEKDAY_NAMES[6][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating 0
   {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
   {"So",  "Mo",  "Di",  "Mi",  "Do",  "Fr",  "Sa" },
   {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"},
   {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
   {"Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"},
+  {"Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"},
 };
 
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
