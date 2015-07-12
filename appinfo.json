@@ -52,7 +52,7 @@
         "type": "font",
         "name": "FONT_30",
         "file": "fonts/VarelaRound-Regular.ttf",
-        "characterRegex": "[0-9A-Za-z éáåäö]"
+        "characterRegex": "[0-9A-Za-z éáåäöø]"
       }
     ]
   }
