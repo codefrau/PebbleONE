@@ -27,7 +27,10 @@ var SECONDS_MODE_NEVER    = 0,
     BATTERY_MODE_NEVER    = 0,
     BATTERY_MODE_IF_LOW   = 1,
     BATTERY_MODE_ALWAYS   = 2,
-    DATE_MODE_OFF         = 0,
+    FACE_POS_OFF          = 0,
+    FACE_POS_TOP          = 1,
+    FACE_POS_BOTTOM       = 2,
+    DATE_MODE_OFF         = 0,  // not used anymore
     DATE_MODE_EN          = 1,
     DATE_MODE_DE          = 2,
     DATE_MODE_ES          = 3,
@@ -48,6 +51,7 @@ var SECONDS_MODE_NEVER    = 0,
 var config = {
     seconds_mode:   SECONDS_MODE_ALWAYS,
     battery_mode:   BATTERY_MODE_IF_LOW,
+    date_pos:       DATE_POS_BOTTOM,
     date_mode:      DATE_MODE_EN,
     bluetooth_mode: BLUETOOTH_MODE_ALWAYS,
     graphics_mode:  GRAPHICS_MODE_NORMAL,
@@ -84,6 +88,12 @@ Pebble.addEventListener('ready',
         var json = window.localStorage.getItem('config');
         if (typeof json === 'string') {
             config = JSON.parse(json);
+            if (config.date_mode == DATE_MODE_OFF) { // version 2.7 introduced date_pos
+                config.date_mode = DATE_MODE_EN;
+                config.date_pos = DATE_POS_OFF;
+            } else if (config.date_pos == null) {
+                config.date_pos = DATE_POS_BOTTOM;
+            }
             console.log("loaded config " + JSON.stringify(config));
         }
         if (window.localStorage.getItem('pebbleNeedsConfig')) {

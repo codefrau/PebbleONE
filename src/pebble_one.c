@@ -30,7 +30,8 @@
 #define BLUETOOTH_MODE 3
 #define GRAPHICS_MODE  4
 #define CONNLOST_MODE  5
-#define INBOX_SIZE     (1 + (7+4) * 6)
+#define DATE_POS       6
+#define INBOX_SIZE     (1 + (7+4) * 7)
 
 #define REQUEST_CONFIG 100
 #define OUTBOX_SIZE    (1 + (7+4) * 1)
@@ -41,6 +42,9 @@
 #define BATTERY_MODE_NEVER    0
 #define BATTERY_MODE_IF_LOW   1
 #define BATTERY_MODE_ALWAYS   2
+#define DATE_POS_OFF          0
+#define DATE_POS_TOP          1
+#define DATE_POS_BOTTOM       2
 #define DATE_MODE_OFF         0
 #define DATE_MODE_FIRST       1
 #define DATE_MODE_EN          1
@@ -78,6 +82,7 @@
 
 static int seconds_mode   = SECONDS_MODE_ALWAYS;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
+static int date_pos       = DATE_POS_BOTTOM;
 static int date_mode      = DATE_MODE_EN;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
 static int graphics_mode  = GRAPHICS_MODE_NORMAL;
@@ -252,7 +257,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   now = tick_time;
   layer_mark_dirty(hands_layer);
-  if (date_mode != DATE_MODE_OFF && (now->tm_wday != date_wday || now->tm_mday != date_mday))
+  if (date_pos != DATE_POS_OFF && (now->tm_wday != date_wday || now->tm_mday != date_mday))
     layer_mark_dirty(date_layer);
 }
 
@@ -293,7 +298,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bitmap_layer_set_bitmap(battery_layer, battery_images[1]);
   bool showSeconds = seconds_mode != SECONDS_MODE_NEVER;
   bool showBattery = battery_mode != BATTERY_MODE_NEVER;
-  bool showDate = date_mode != DATE_MODE_OFF;
+  bool showDate = date_pos != DATE_POS_OFF;
 #else
   bitmap_layer_set_bitmap(battery_layer, battery_images[
     (charge_state.is_charging ? 11 : 0) + min(charge_state.charge_percent / 10, 10)]);
@@ -303,7 +308,7 @@ void handle_battery(BatteryChargeState charge_state) {
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
-  bool showDate = date_mode != DATE_MODE_OFF;
+  bool showDate = date_pos != DATE_POS_OFF;
 #endif
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
@@ -331,6 +336,9 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
         break;
       case BATTERY_MODE:
         battery_mode = tuple->value->int32;
+        break;
+      case DATE_POS:
+        date_pos = tuple->value->int32;
         break;
       case DATE_MODE:
         date_mode = tuple->value->int32;
@@ -428,6 +436,7 @@ void handle_init() {
   has_config = true;
   if (persist_exists(SECONDS_MODE)) seconds_mode = persist_read_int(SECONDS_MODE); else has_config = false;
   if (persist_exists(BATTERY_MODE)) battery_mode = persist_read_int(BATTERY_MODE); else has_config = false;
+  if (persist_exists(DATE_POS)) date_pos = persist_read_int(DATE_POS); // added in 2.7
   if (persist_exists(DATE_MODE)) date_mode = persist_read_int(DATE_MODE); else has_config = false;
   if (persist_exists(BLUETOOTH_MODE)) bluetooth_mode = persist_read_int(BLUETOOTH_MODE); else has_config = false;
   if (persist_exists(GRAPHICS_MODE)) graphics_mode = persist_read_int(GRAPHICS_MODE); else has_config = false;
@@ -451,6 +460,7 @@ void handle_deinit() {
   if (has_config) {
     persist_write_int(SECONDS_MODE, seconds_mode);
     persist_write_int(BATTERY_MODE, battery_mode);
+    persist_write_int(DATE_POS, date_pos);
     persist_write_int(DATE_MODE, date_mode);
     persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
     persist_write_int(GRAPHICS_MODE, graphics_mode);
