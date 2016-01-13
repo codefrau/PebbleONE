@@ -49,13 +49,13 @@ var SECONDS_MODE_NEVER    = 0,
     LOCALE_MODE_COUNT     = 2;
 
 var config = {
-    seconds_mode:   SECONDS_MODE_ALWAYS,
+    seconds_mode:   SECONDS_MODE_NEVER,
     battery_mode:   BATTERY_MODE_IF_LOW,
     date_pos:       DATE_POS_BOTTOM,
     date_mode:      DATE_MODE_EN,
     bluetooth_mode: BLUETOOTH_MODE_ALWAYS,
     graphics_mode:  GRAPHICS_MODE_NORMAL,
-    connlost_mode:  CONNLOST_MODE_IGNORE,
+    connlost_mode:  CONNLOST_MODE_WARN,
 };
 
 var send_in_progress = false;

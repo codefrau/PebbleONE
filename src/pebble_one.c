@@ -80,13 +80,13 @@
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-static int seconds_mode   = SECONDS_MODE_ALWAYS;
+static int seconds_mode   = SECONDS_MODE_NEVER;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
 static int date_pos       = DATE_POS_BOTTOM;
 static int date_mode      = DATE_MODE_EN;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
 static int graphics_mode  = GRAPHICS_MODE_NORMAL;
-static int connlost_mode  = CONNLOST_MODE_IGNORE;
+static int connlost_mode  = CONNLOST_MODE_WARN;
 static bool has_config = false;
 
 static Window *window;
