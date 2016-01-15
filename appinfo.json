@@ -3,12 +3,12 @@
   "shortName": "ONE",
   "longName": "PebbleONE",
   "companyName": "Bert Freudenberg",
-  "versionCode": 13,
-  "versionLabel": "2.7.0",
+  "versionCode": 14,
+  "versionLabel": "3.0",
   "watchapp": {
     "watchface": true
   },
-  "capabilities": [ 
+  "capabilities": [
     "configurable"
   ],
   "appKeys": {
@@ -56,5 +56,11 @@
         "characterRegex": "[0-9A-Za-z éáåäö]"
       }
     ]
-  }
+  },
+  "targetPlatforms": [
+    "aplite",
+    "basalt",
+    "chalk"
+  ],
+  "sdkVersion": "3"
 }
