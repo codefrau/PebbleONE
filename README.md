@@ -8,9 +8,8 @@ You can install the app from the [Pebble Store][download].
 
 Contributions are highly welcome - just send me a [pull request][pullreq].
 
--- Bert Freudenberg, June 2015
+-- Bert Freudenberg, January 2016
 
 [pebble]:  https://getpebble.com/
-[sdk2]:    https://developer.getpebble.com/2/
 [pullreq]: https://help.github.com/articles/using-pull-requests
-[download]: http://www.mypebblefaces.com/apps/596/637/
+[download]: https://apps.getpebble.com/applications/52bca8bb87e209ebc9000005
