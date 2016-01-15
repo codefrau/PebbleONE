@@ -103,8 +103,6 @@ static BitmapLayer *battery_layer;
 static GBitmap *bluetooth_images[4];
 static BitmapLayer *bluetooth_layer;
 
-static InverterLayer *inverter_layer;
-
 static struct tm *now = NULL;
 static int date_wday = -1;
 static int date_mday = -1;
@@ -322,11 +320,6 @@ void handle_battery(BatteryChargeState charge_state) {
   }
 }
 
-void handle_inverter() {
-  if (layer_get_hidden(inverter_layer_get_layer(inverter_layer)) != (graphics_mode == GRAPHICS_MODE_NORMAL))
-    layer_set_hidden(inverter_layer_get_layer(inverter_layer), graphics_mode == GRAPHICS_MODE_NORMAL);
-}
-
 void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   Tuple *tuple = dict_read_first(received);
   while (tuple) {
@@ -359,7 +352,6 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   has_config = true;
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
-  handle_inverter();
   layer_mark_dirty(hands_layer);
   layer_mark_dirty(date_layer);
 }
@@ -421,9 +413,6 @@ void handle_init() {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(debug_layer));
 #endif
   
-  inverter_layer = inverter_layer_create(GRect(0, 0, 144, 168));
-  layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(inverter_layer));
-
   hour_path = gpath_create(&HOUR_POINTS);
   gpath_move_to(hour_path, GPoint(CENTER_X, CENTER_Y));
   min_path = gpath_create(&MIN_POINTS);
@@ -447,7 +436,6 @@ void handle_init() {
   handle_battery(battery_state_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   handle_bluetooth(bluetooth_connection_service_peek());
-  handle_inverter();
   app_message_register_inbox_received(&handle_appmessage_receive);
   app_message_open(INBOX_SIZE, OUTBOX_SIZE);
   if (!has_config) request_config();
@@ -473,7 +461,6 @@ void handle_deinit() {
   gpath_destroy(sec_path);
   gpath_destroy(min_path);
   gpath_destroy(hour_path);
-  inverter_layer_destroy(inverter_layer);
 #if DEBUG
   text_layer_destroy(debug_layer);
 #endif
