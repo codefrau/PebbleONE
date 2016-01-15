@@ -107,7 +107,7 @@ static struct tm *now = NULL;
 static int date_wday = -1;
 static int date_mday = -1;
 static bool hide_seconds = false;
-static bool was_connected = true;
+static bool was_connected = false;
 
 static GFont font;
 #define DATE_BUFFER_BYTES 32
