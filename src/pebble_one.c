@@ -109,7 +109,7 @@ static int date_mday = -1;
 static bool hide_seconds = false;
 static bool was_connected = true;
 
-static GFont *font;
+static GFont font;
 #define DATE_BUFFER_BYTES 32
 static char date_buffer[DATE_BUFFER_BYTES];
 
@@ -384,7 +384,7 @@ void handle_init() {
   layer_add_child(window_get_root_layer(window), background_layer);
 
   logo = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);  
-  GRect frame = logo->bounds;
+  GRect frame = gbitmap_get_bounds(logo);
   grect_align(&frame, &GRect(0, 0, 144, 72), GAlignCenter, false);
   logo_layer = bitmap_layer_create(frame);
   bitmap_layer_set_bitmap	(logo_layer, logo);
