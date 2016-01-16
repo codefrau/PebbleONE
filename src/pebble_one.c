@@ -296,7 +296,6 @@ void handle_battery(BatteryChargeState charge_state) {
   bitmap_layer_set_bitmap(battery_layer, battery_images[1]);
   bool showSeconds = seconds_mode != SECONDS_MODE_NEVER;
   bool showBattery = battery_mode != BATTERY_MODE_NEVER;
-  bool showDate = date_pos != DATE_POS_OFF;
 #else
   bitmap_layer_set_bitmap(battery_layer, battery_images[
     (charge_state.is_charging ? 11 : 0) + min(charge_state.charge_percent / 10, 10)]);
@@ -306,7 +305,6 @@ void handle_battery(BatteryChargeState charge_state) {
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
-  bool showDate = date_pos != DATE_POS_OFF;
 #endif
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
@@ -314,10 +312,16 @@ void handle_battery(BatteryChargeState charge_state) {
     tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   }
   layer_set_hidden(bitmap_layer_get_layer(battery_layer), !showBattery);
-  if (layer_get_hidden(date_layer) != !showDate) {
-    layer_set_hidden(date_layer, !showDate);
-    layer_set_frame(background_layer, GRect(0, showDate ? 0 : 12, 144, 144));
-  }
+}
+
+void handle_layout() {
+  int face_top = date_pos == DATE_POS_BOTTOM ? 0 : date_pos == DATE_POS_OFF ? 12 : 24;
+  int date_top = date_pos == DATE_POS_TOP ? 0 : 144;
+  int battery_top = date_pos == DATE_POS_TOP ? 168-10-3 : 3;
+  layer_set_hidden(date_layer, date_pos == DATE_POS_OFF);
+  layer_set_frame(background_layer, GRect(0, face_top, 144, 144));
+  layer_set_frame(date_layer, GRect(0, date_top, 144, 24));
+  layer_set_frame((Layer*)battery_layer, GRect(144-16-3, battery_top, 16, 10));
 }
 
 void handle_appmessage_receive(DictionaryIterator *received, void *context) {
@@ -352,6 +356,7 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   has_config = true;
   handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
+  handle_layout();
   layer_mark_dirty(hands_layer);
   layer_mark_dirty(date_layer);
 }
@@ -434,6 +439,7 @@ void handle_init() {
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
   handle_battery(battery_state_service_peek());
+  handle_layout();
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   handle_bluetooth(bluetooth_connection_service_peek());
   app_message_register_inbox_received(&handle_appmessage_receive);
