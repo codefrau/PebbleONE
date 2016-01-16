@@ -227,7 +227,6 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorWhite);
 
   // weekday
-  //strftime(date_buffer, DATE_BUFFER_BYTES, "%a", now);
   if (date_mode < DATE_MODE_FIRST || date_mode > DATE_MODE_LAST)
     date_mode = DATE_MODE_FIRST;
   graphics_draw_text(ctx,
@@ -253,7 +252,8 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 }
 
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
-  now = tick_time;
+  time_t clock = time(NULL);
+  now = localtime(&clock);
   layer_mark_dirty(hands_layer);
   if (date_pos != DATE_POS_OFF && (now->tm_wday != date_wday || now->tm_mday != date_mday))
     layer_mark_dirty(date_layer);
