@@ -82,6 +82,9 @@
 
 static int seconds_mode   = SECONDS_MODE_NEVER;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
+#define FG_COLOR (graphics_mode == GRAPHICS_MODE_INVERT ? GColorBlack : GColorWhite)
+#define BG_COLOR (graphics_mode == GRAPHICS_MODE_INVERT ? GColorWhite : GColorBlack)
+
 static int date_pos       = DATE_POS_BOTTOM;
 static int date_mode      = DATE_MODE_EN;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
@@ -166,7 +169,7 @@ const char WEEKDAY_NAMES[6][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating
 };
 
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
-	graphics_context_set_fill_color(ctx, GColorWhite);
+	graphics_context_set_fill_color(ctx, FG_COLOR);
   for (int32_t angle = 0; angle < THREESIXTY; angle += THREESIXTY / 12) {
     GPoint pos = GPoint(
       CENTER_X + DOTS_RADIUS * cos_lookup(angle) / ONE,
@@ -189,8 +192,8 @@ void hands_layer_update_callback(Layer *layer, GContext* ctx) {
   int32_t min_angle = THREESIXTY * now->tm_min / 60;
   gpath_rotate_to(hour_path, hour_angle);
   gpath_rotate_to(min_path, min_angle);
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, FG_COLOR);
+  graphics_context_set_stroke_color(ctx, BG_COLOR);
   gpath_draw_filled(ctx, hour_path);
   gpath_draw_outline(ctx, hour_path);
   graphics_draw_circle(ctx, center, DOTS_SIZE+4);
@@ -204,16 +207,16 @@ void hands_layer_update_callback(Layer *layer, GContext* ctx) {
     GPoint sec_pos = GPoint(
       CENTER_X + SEC_RADIUS * sin_lookup(sec_angle) / ONE,
       CENTER_Y - SEC_RADIUS * cos_lookup(sec_angle) / ONE);
-    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_context_set_fill_color(ctx, BG_COLOR);
     gpath_rotate_to(sec_path, sec_angle);
     gpath_draw_filled(ctx, sec_path);
-    graphics_context_set_stroke_color(ctx, GColorWhite);
+    graphics_context_set_stroke_color(ctx, FG_COLOR);
     graphics_context_set_compositing_mode(ctx, GCompOpAssignInverted);
     graphics_draw_line(ctx, center, sec_pos);
   }
 
   // center dot
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, BG_COLOR);
   graphics_fill_circle(ctx, center, DOTS_SIZE);
 }
 
@@ -224,7 +227,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
   now->tm_mday = 25;
 #endif
 
-  graphics_context_set_text_color(ctx, GColorWhite);
+  graphics_context_set_text_color(ctx, FG_COLOR);
 
   // weekday
   if (date_mode < DATE_MODE_FIRST || date_mode > DATE_MODE_LAST)
@@ -322,6 +325,7 @@ void handle_layout() {
   layer_set_frame(background_layer, GRect(0, face_top, 144, 144));
   layer_set_frame(date_layer, GRect(0, date_top, 144, 24));
   layer_set_frame((Layer*)battery_layer, GRect(144-16-3, battery_top, 16, 10));
+  window_set_background_color(window, BG_COLOR);
 }
 
 void handle_appmessage_receive(DictionaryIterator *received, void *context) {
@@ -359,6 +363,7 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   handle_layout();
   layer_mark_dirty(hands_layer);
   layer_mark_dirty(date_layer);
+  layer_mark_dirty(background_layer);
 }
 
 void request_config(void) {
@@ -378,7 +383,7 @@ void handle_init() {
   now = localtime(&clock);
   window = window_create();
   window_stack_push(window, true /* Animated */);
-  window_set_background_color(window, GColorBlack);
+  window_set_background_color(window, BG_COLOR);
 
   date_layer = layer_create(GRect(0, 144, 144, 24));
   layer_set_update_proc(date_layer, &date_layer_update_callback);
@@ -413,8 +418,8 @@ void handle_init() {
   debug_layer = text_layer_create(GRect(0, 0, 32, 16));
   strcpy(debug_buffer, "");
   text_layer_set_text(debug_layer, debug_buffer);
-  text_layer_set_text_color(debug_layer, GColorWhite);
-  text_layer_set_background_color(debug_layer, GColorBlack);
+  text_layer_set_text_color(debug_layer, FG_COLOR);
+  text_layer_set_background_color(debug_layer, BG_COLOR);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(debug_layer));
 #endif
   
