@@ -82,9 +82,6 @@
 
 static int seconds_mode   = SECONDS_MODE_NEVER;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
-#define FG_COLOR (graphics_mode == GRAPHICS_MODE_INVERT ? GColorBlack : GColorWhite)
-#define BG_COLOR (graphics_mode == GRAPHICS_MODE_INVERT ? GColorWhite : GColorBlack)
-
 static int date_pos       = DATE_POS_BOTTOM;
 static int date_mode      = DATE_MODE_EN;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
@@ -103,6 +100,10 @@ static BitmapLayer *logo_layer;
 
 static GBitmap *bluetooth_images[4];
 static BitmapLayer *bluetooth_layer;
+
+static GColor bw_palette[2];
+#define BG_COLOR bw_palette[0]
+#define FG_COLOR bw_palette[1]
 
 static struct tm *now = NULL;
 static int date_wday = -1;
@@ -353,6 +354,8 @@ void handle_layout() {
   layer_set_frame(background_layer, GRect(0, face_top, 144, 144));
   layer_set_frame(date_layer, GRect(0, date_top, 144, 24));
   layer_set_frame(battery_layer, GRect(144-22-3, battery_top, 22, 10));
+  FG_COLOR = graphics_mode == GRAPHICS_MODE_INVERT ? GColorBlack : GColorWhite;
+  BG_COLOR = graphics_mode == GRAPHICS_MODE_INVERT ? GColorWhite : GColorBlack;
   window_set_background_color(window, BG_COLOR);
 }
 
@@ -421,7 +424,8 @@ void handle_init() {
   layer_set_update_proc(background_layer, &background_layer_update_callback);
   layer_add_child(window_get_root_layer(window), background_layer);
 
-  logo = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);  
+  logo = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
+  gbitmap_set_palette(logo, bw_palette, false);
   GRect frame = gbitmap_get_bounds(logo);
   grect_align(&frame, &GRect(0, 0, 144, 72), GAlignCenter, false);
   logo_layer = bitmap_layer_create(frame);
@@ -436,8 +440,10 @@ void handle_init() {
   layer_set_update_proc(battery_layer, &battery_layer_update_callback);
   layer_add_child(window_get_root_layer(window), battery_layer);
 
-  for (int i = 0; i < 2; i++)
+  for (int i = 0; i < 2; i++) {
     bluetooth_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF + i);  
+    gbitmap_set_palette(bluetooth_images[i], bw_palette, false);
+  }
   bluetooth_layer = bitmap_layer_create(GRect(66, 0, 13, 13));
   layer_add_child(background_layer, bitmap_layer_get_layer(bluetooth_layer));
 

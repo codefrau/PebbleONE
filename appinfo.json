@@ -23,10 +23,10 @@
   },
   "resources": {
     "media": [
-      { "type": "png", "name": "IMAGE_MENU_ICON", "file": "images/menu_icon.png", "menuIcon": true },
-      { "type": "png", "name": "IMAGE_LOGO", "file": "images/pebble9x4.png" },
-      { "type": "png", "name": "IMAGE_BLUETOOTH_OFF", "file": "images/bluetooth_off.png" },
-      { "type": "png", "name": "IMAGE_BLUETOOTH_ON", "file": "images/bluetooth_on.png" },
+      { "type": "bitmap", "name": "IMAGE_MENU_ICON", "file": "images/menu_icon.png", "menuIcon": true },
+      { "type": "bitmap", "name": "IMAGE_LOGO", "file": "images/pebble9x4.png", "memoryFormat": "1BitPalette" },
+      { "type": "bitmap", "name": "IMAGE_BLUETOOTH_OFF", "file": "images/bluetooth_off.png", "memoryFormat": "1BitPalette" },
+      { "type": "bitmap", "name": "IMAGE_BLUETOOTH_ON", "file": "images/bluetooth_on.png", "memoryFormat": "1BitPalette" },
       {
         "type": "font",
         "name": "FONT_30",
