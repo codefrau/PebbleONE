@@ -96,12 +96,10 @@ static Window *window;
 static Layer *background_layer;
 static Layer *hands_layer;
 static Layer *date_layer;
+static Layer *battery_layer;
 
 static GBitmap *logo;
 static BitmapLayer *logo_layer;
-
-static GBitmap *battery_images[22];
-static BitmapLayer *battery_layer;
 
 static GBitmap *bluetooth_images[4];
 static BitmapLayer *bluetooth_layer;
@@ -158,6 +156,32 @@ const GPathInfo SEC_POINTS = {
   }
 };
 static GPath *sec_path;
+
+const GPathInfo BATTERY_POINTS = {
+  8,
+  (GPoint []) {
+    { 7, 0},
+    {20, 0},
+    {20, 6},
+    {21, 2},
+    {21, 6},
+    {20, 6},
+    {20, 8},
+    { 7, 8},
+  }
+};
+static GPath *battery_path;
+
+const GPathInfo CHARGE_POINTS = {
+  4,
+  (GPoint []) {
+    {3, 1},
+    {0, 4},
+    {3, 4},
+    {0, 7},
+  }
+};
+static GPath *charge_path;
 
 const char WEEKDAY_NAMES[6][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating 0
   {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
@@ -254,6 +278,21 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
   date_mday = now->tm_mday;
 }
 
+void battery_layer_update_callback(Layer *layer, GContext* ctx) {
+  graphics_context_set_stroke_color(ctx, FG_COLOR);
+  gpath_draw_outline(ctx, battery_path);
+  BatteryChargeState state = battery_state_service_peek();
+  int width = state.charge_percent * 10 / 100;
+  #ifdef PBL_BW
+  graphics_context_set_fill_color(ctx, FG_COLOR);
+  #else
+  graphics_context_set_fill_color(ctx, state.is_plugged ? (width < 3 ? GColorRed : GColorGreen) : FG_COLOR);
+  #endif
+  graphics_fill_rect(ctx, GRect(9, 2, width, 5), 0, GCornerNone);  
+  if (state.is_charging)
+    gpath_draw_outline_open(ctx, charge_path);
+}
+
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   time_t clock = time(NULL);
   now = localtime(&clock);
@@ -290,41 +329,30 @@ void lost_connection_warning(void *data) {
 }
 
 void handle_battery(BatteryChargeState charge_state) {
-#if DEBUG
-  //strftime(debug_buffer, DEBUG_BUFFER_BYTES, "%d.%m.%Y %H:%M:%S", now);
-  snprintf(debug_buffer, DEBUG_BUFFER_BYTES, "%s%d%%",  charge_state.is_charging ? "+" : "", charge_state.charge_percent);
-  text_layer_set_text(debug_layer, debug_buffer);
-#endif
-#if SCREENSHOT
-  bitmap_layer_set_bitmap(battery_layer, battery_images[1]);
-  bool showSeconds = seconds_mode != SECONDS_MODE_NEVER;
-  bool showBattery = battery_mode != BATTERY_MODE_NEVER;
-#else
-  bitmap_layer_set_bitmap(battery_layer, battery_images[
-    (charge_state.is_charging ? 11 : 0) + min(charge_state.charge_percent / 10, 10)]);
+  layer_mark_dirty(battery_layer);
+}
+
+void handle_layout() {
+  BatteryChargeState charge_state = battery_state_service_peek();
   bool battery_is_low = charge_state.charge_percent <= 10;
   bool showSeconds = seconds_mode == SECONDS_MODE_ALWAYS
     || (seconds_mode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
-#endif
+  int face_top = date_pos == DATE_POS_BOTTOM ? 0 : date_pos == DATE_POS_OFF ? 12 : 24;
+  int date_top = date_pos == DATE_POS_TOP ? 0 : 144;
+  int battery_top = date_pos == DATE_POS_TOP ? 168-10-3 : 3;
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
     tick_timer_service_unsubscribe();
     tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   }
-  layer_set_hidden(bitmap_layer_get_layer(battery_layer), !showBattery);
-}
-
-void handle_layout() {
-  int face_top = date_pos == DATE_POS_BOTTOM ? 0 : date_pos == DATE_POS_OFF ? 12 : 24;
-  int date_top = date_pos == DATE_POS_TOP ? 0 : 144;
-  int battery_top = date_pos == DATE_POS_TOP ? 168-10-3 : 3;
   layer_set_hidden(date_layer, date_pos == DATE_POS_OFF);
+  layer_set_hidden(battery_layer, !showBattery);
   layer_set_frame(background_layer, GRect(0, face_top, 144, 144));
   layer_set_frame(date_layer, GRect(0, date_top, 144, 24));
-  layer_set_frame((Layer*)battery_layer, GRect(144-16-3, battery_top, 16, 10));
+  layer_set_frame(battery_layer, GRect(144-22-3, battery_top, 22, 10));
   window_set_background_color(window, BG_COLOR);
 }
 
@@ -358,9 +386,9 @@ void handle_appmessage_receive(DictionaryIterator *received, void *context) {
   }
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Received config");
   has_config = true;
-  handle_battery(battery_state_service_peek());
   handle_bluetooth(bluetooth_connection_service_peek());
   handle_layout();
+  layer_mark_dirty(battery_layer);
   layer_mark_dirty(hands_layer);
   layer_mark_dirty(date_layer);
   layer_mark_dirty(background_layer);
@@ -404,10 +432,9 @@ void handle_init() {
   layer_set_update_proc(hands_layer, &hands_layer_update_callback);
   layer_add_child(background_layer, hands_layer);
 
-  for (int i = 0; i < 22; i++)
-    battery_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_0 + i);  
-  battery_layer = bitmap_layer_create(GRect(144-16-3, 3, 16, 10));
-  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(battery_layer));
+  battery_layer = layer_create(GRect(144-22-3, 3, 22, 10));
+  layer_set_update_proc(battery_layer, &battery_layer_update_callback);
+  layer_add_child(window_get_root_layer(window), battery_layer);
 
   for (int i = 0; i < 2; i++)
     bluetooth_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF + i);  
@@ -429,6 +456,8 @@ void handle_init() {
   gpath_move_to(min_path, GPoint(CENTER_X, CENTER_Y));
   sec_path = gpath_create(&SEC_POINTS);
   gpath_move_to(sec_path, GPoint(CENTER_X, CENTER_Y));
+  battery_path = gpath_create(&BATTERY_POINTS);
+  charge_path = gpath_create(&CHARGE_POINTS);
 
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
 
@@ -441,10 +470,9 @@ void handle_init() {
   if (persist_exists(GRAPHICS_MODE)) graphics_mode = persist_read_int(GRAPHICS_MODE); else has_config = false;
   if (persist_exists(CONNLOST_MODE)) connlost_mode = persist_read_int(CONNLOST_MODE); else has_config = false;
   if (has_config) APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded config");
+  handle_layout();
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
   battery_state_service_subscribe(&handle_battery);
-  handle_battery(battery_state_service_peek());
-  handle_layout();
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   handle_bluetooth(bluetooth_connection_service_peek());
   app_message_register_inbox_received(&handle_appmessage_receive);
@@ -469,6 +497,8 @@ void handle_deinit() {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Did not write config");
   }
   fonts_unload_custom_font(font);
+  gpath_destroy(charge_path);
+  gpath_destroy(battery_path);
   gpath_destroy(sec_path);
   gpath_destroy(min_path);
   gpath_destroy(hour_path);
@@ -478,9 +508,7 @@ void handle_deinit() {
   layer_destroy(hands_layer);
   bitmap_layer_destroy(logo_layer);
   gbitmap_destroy(logo);
-  bitmap_layer_destroy(battery_layer);
-  for (int i = 0; i < 22; i++)
-    gbitmap_destroy(battery_images[i]);
+  layer_destroy(battery_layer);
   bitmap_layer_destroy(bluetooth_layer);
   for (int i = 0; i < 2; i++)
     gbitmap_destroy(bluetooth_images[i]);
