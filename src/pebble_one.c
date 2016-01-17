@@ -279,17 +279,17 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
 }
 
 void battery_layer_update_callback(Layer *layer, GContext* ctx) {
+  BatteryChargeState battery = battery_state_service_peek();
   graphics_context_set_stroke_color(ctx, FG_COLOR);
   gpath_draw_outline(ctx, battery_path);
-  BatteryChargeState state = battery_state_service_peek();
-  int width = state.charge_percent * 10 / 100;
+  int width = battery.charge_percent * 10 / 100;
   #ifdef PBL_BW
   graphics_context_set_fill_color(ctx, FG_COLOR);
   #else
-  graphics_context_set_fill_color(ctx, state.is_plugged ? (width < 3 ? GColorRed : GColorGreen) : FG_COLOR);
+  graphics_context_set_fill_color(ctx, battery.is_plugged ? (width < 3 ? GColorRed : GColorGreen) : FG_COLOR);
   #endif
   graphics_fill_rect(ctx, GRect(9, 2, width, 5), 0, GCornerNone);  
-  if (state.is_charging)
+  if (battery.is_plugged)
     gpath_draw_outline_open(ctx, charge_path);
 }
 
@@ -328,18 +328,14 @@ void lost_connection_warning(void *data) {
     handle_bluetooth(bluetooth_connection_service_peek());
 }
 
-void handle_battery(BatteryChargeState charge_state) {
-  layer_mark_dirty(battery_layer);
-}
-
 void handle_layout() {
   BatteryChargeState charge_state = battery_state_service_peek();
-  bool battery_is_low = charge_state.charge_percent <= 10;
+  bool battery_is_low = charge_state.charge_percent <= 20;
   bool showSeconds = seconds_mode == SECONDS_MODE_ALWAYS
-    || (seconds_mode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_charging));
+    || (seconds_mode == SECONDS_MODE_IFNOTLOW && (!battery_is_low || charge_state.is_plugged));
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
-    || charge_state.is_charging;
+    || charge_state.is_plugged;
   int face_top = PBL_IF_ROUND_ELSE(0, date_pos == DATE_POS_BOTTOM ? 0 : date_pos == DATE_POS_OFF ? 12 : 24);
   int date_top = date_pos == DATE_POS_TOP ? 0 : EXTENT;
   int battery_top = date_pos == DATE_POS_TOP ? 168-10-3 : 3;
@@ -356,6 +352,11 @@ void handle_layout() {
   FG_COLOR = graphics_mode == GRAPHICS_MODE_INVERT ? GColorBlack : GColorWhite;
   BG_COLOR = graphics_mode == GRAPHICS_MODE_INVERT ? GColorWhite : GColorBlack;
   window_set_background_color(window, BG_COLOR);
+}
+
+void handle_battery(BatteryChargeState charge_state) {
+  handle_layout();
+  layer_mark_dirty(battery_layer);
 }
 
 void handle_appmessage_receive(DictionaryIterator *received, void *context) {
