@@ -54,7 +54,7 @@ var config = {
     date_pos:       DATE_POS_BOTTOM,
     date_mode:      DATE_MODE_EN,
     bluetooth_mode: BLUETOOTH_MODE_ALWAYS,
-    graphics_mode:  GRAPHICS_MODE_NORMAL,
+    graphics_mode:  GRAPHICS_MODE_INVERT,
     connlost_mode:  CONNLOST_MODE_WARN,
 };
 

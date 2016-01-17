@@ -69,23 +69,22 @@
 #define ONE        TRIG_MAX_RATIO
 #define THREESIXTY TRIG_MAX_ANGLE
 
-#define CENTER_X    71
-#define CENTER_Y    71
-#define DOTS_RADIUS 67
-#define DOTS_SIZE    4
-#define HOUR_RADIUS 40
-#define MIN_RADIUS  60
-#define SEC_RADIUS  62
+#define EXTENT      PBL_IF_ROUND_ELSE(180, 144)
+#define CENTER_X    PBL_IF_ROUND_ELSE( 90, 71)
+#define CENTER_Y    PBL_IF_ROUND_ELSE( 90, 71)
+#define DOTS_RADIUS PBL_IF_ROUND_ELSE( 80, 67)
+#define DOTS_SIZE   PBL_IF_ROUND_ELSE(  5,  4)
+#define SEC_RADIUS  PBL_IF_ROUND_ELSE( 72, 62)
 
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
 static int seconds_mode   = SECONDS_MODE_NEVER;
 static int battery_mode   = BATTERY_MODE_IF_LOW;
-static int date_pos       = DATE_POS_BOTTOM;
+static int date_pos       = PBL_IF_ROUND_ELSE(DATE_POS_OFF, DATE_POS_BOTTOM);
 static int date_mode      = DATE_MODE_EN;
 static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
-static int graphics_mode  = GRAPHICS_MODE_NORMAL;
+static int graphics_mode  = PBL_IF_ROUND_ELSE(GRAPHICS_MODE_INVERT, GRAPHICS_MODE_NORMAL);
 static int connlost_mode  = CONNLOST_MODE_WARN;
 static bool has_config = false;
 
@@ -260,7 +259,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_draw_text(ctx,
     WEEKDAY_NAMES[date_mode - DATE_MODE_FIRST][now->tm_wday],
     font,
-    GRect(0, -6, 144, 32),
+    GRect(0, -6, EXTENT, 32),
     GTextOverflowModeWordWrap,
     GTextAlignmentLeft,
     NULL);
@@ -270,7 +269,7 @@ void date_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_draw_text(ctx,
     date_buffer,
     font,
-    GRect(0, -6, 144, 32),
+    GRect(0, -6, EXTENT, 32),
     GTextOverflowModeWordWrap,
     GTextAlignmentRight,
     NULL);
@@ -341,8 +340,8 @@ void handle_layout() {
   bool showBattery = battery_mode == BATTERY_MODE_ALWAYS
     || (battery_mode == BATTERY_MODE_IF_LOW && battery_is_low)
     || charge_state.is_charging;
-  int face_top = date_pos == DATE_POS_BOTTOM ? 0 : date_pos == DATE_POS_OFF ? 12 : 24;
-  int date_top = date_pos == DATE_POS_TOP ? 0 : 144;
+  int face_top = PBL_IF_ROUND_ELSE(0, date_pos == DATE_POS_BOTTOM ? 0 : date_pos == DATE_POS_OFF ? 12 : 24);
+  int date_top = date_pos == DATE_POS_TOP ? 0 : EXTENT;
   int battery_top = date_pos == DATE_POS_TOP ? 168-10-3 : 3;
   if (hide_seconds != !showSeconds) {
     hide_seconds = !showSeconds;
@@ -351,9 +350,9 @@ void handle_layout() {
   }
   layer_set_hidden(date_layer, date_pos == DATE_POS_OFF);
   layer_set_hidden(battery_layer, !showBattery);
-  layer_set_frame(background_layer, GRect(0, face_top, 144, 144));
-  layer_set_frame(date_layer, GRect(0, date_top, 144, 24));
-  layer_set_frame(battery_layer, GRect(144-22-3, battery_top, 22, 10));
+  layer_set_frame(background_layer, GRect(0, face_top, EXTENT, EXTENT));
+  layer_set_frame(date_layer, GRect(0, date_top, EXTENT, 24));
+  layer_set_frame(battery_layer, GRect(EXTENT-22-3, battery_top, 22, 10));
   FG_COLOR = graphics_mode == GRAPHICS_MODE_INVERT ? GColorBlack : GColorWhite;
   BG_COLOR = graphics_mode == GRAPHICS_MODE_INVERT ? GColorWhite : GColorBlack;
   window_set_background_color(window, BG_COLOR);
@@ -416,18 +415,18 @@ void handle_init() {
   window_stack_push(window, true /* Animated */);
   window_set_background_color(window, BG_COLOR);
 
-  date_layer = layer_create(GRect(0, 144, 144, 24));
+  date_layer = layer_create(GRect(0, EXTENT, EXTENT, 24));
   layer_set_update_proc(date_layer, &date_layer_update_callback);
   layer_add_child(window_get_root_layer(window), date_layer);
 
-  background_layer = layer_create(GRect(0, 0, 144, 144));
+  background_layer = layer_create(GRect(0, 0, EXTENT, EXTENT));
   layer_set_update_proc(background_layer, &background_layer_update_callback);
   layer_add_child(window_get_root_layer(window), background_layer);
 
   logo = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
   gbitmap_set_palette(logo, bw_palette, false);
   GRect frame = gbitmap_get_bounds(logo);
-  grect_align(&frame, &GRect(0, 0, 144, 72), GAlignCenter, false);
+  grect_align(&frame, &GRect(0, 0, EXTENT, CENTER_Y), GAlignCenter, false);
   logo_layer = bitmap_layer_create(frame);
   bitmap_layer_set_bitmap	(logo_layer, logo);
   layer_add_child(background_layer, bitmap_layer_get_layer(logo_layer));
@@ -436,7 +435,7 @@ void handle_init() {
   layer_set_update_proc(hands_layer, &hands_layer_update_callback);
   layer_add_child(background_layer, hands_layer);
 
-  battery_layer = layer_create(GRect(144-22-3, 3, 22, 10));
+  battery_layer = layer_create(GRect(EXTENT-22-3, 3, 22, 10));
   layer_set_update_proc(battery_layer, &battery_layer_update_callback);
   layer_add_child(window_get_root_layer(window), battery_layer);
 
@@ -444,7 +443,7 @@ void handle_init() {
     bluetooth_images[i] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF + i);  
     gbitmap_set_palette(bluetooth_images[i], bw_palette, false);
   }
-  bluetooth_layer = bitmap_layer_create(GRect(66, 0, 13, 13));
+  bluetooth_layer = bitmap_layer_create(GRect(CENTER_X - 6, CENTER_Y - DOTS_RADIUS - 4, 13, 13));
   layer_add_child(background_layer, bitmap_layer_get_layer(bluetooth_layer));
 
 #if DEBUG
