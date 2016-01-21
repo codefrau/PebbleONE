@@ -192,14 +192,30 @@ const char WEEKDAY_NAMES[6][7][5] = { // 3 chars, 1 for utf-8, 1 for terminating
   {"Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"},
 };
 
+static Animation *startup_animation;
+static int32_t hour_angle = 0;
+static int32_t min_angle = 0;
+static int32_t sec_angle = 0;
+static GPoint hour_pos, hour_delta;
+static GPoint min_pos, min_delta;
+static GPoint sec_pos, sec_delta;
+static int32_t dots_radius = 0;
+
 void background_layer_update_callback(Layer *layer, GContext* ctx) {
-	graphics_context_set_fill_color(ctx, FG_COLOR);
+  if (!dots_radius) return;
+  graphics_context_set_fill_color(ctx, FG_COLOR);
   for (int32_t angle = 0; angle < THREESIXTY; angle += THREESIXTY / 12) {
     GPoint pos = GPoint(
-      CENTER_X + DOTS_RADIUS * cos_lookup(angle) / ONE,
-      CENTER_Y + DOTS_RADIUS * sin_lookup(angle) / ONE);
+      CENTER_X + dots_radius * cos_lookup(angle) / ONE,
+      CENTER_Y - dots_radius * sin_lookup(angle) / ONE);
     graphics_fill_circle(ctx, pos, DOTS_SIZE);
   }
+}
+
+void update_angles() {
+  hour_angle = THREESIXTY * (now->tm_hour * 5 + now->tm_min / 12) / 60;
+  min_angle = THREESIXTY * now->tm_min / 60;
+  sec_angle = THREESIXTY * now->tm_sec / 60;
 }
 
 void hands_layer_update_callback(Layer *layer, GContext* ctx) {
@@ -208,40 +224,36 @@ void hands_layer_update_callback(Layer *layer, GContext* ctx) {
   now->tm_min = 9;
   now->tm_sec = 36;
 #endif
-
-  GPoint center = GPoint(CENTER_X, CENTER_Y);
-
+  update_angles();
+  
   // hours and minutes
-  int32_t hour_angle = THREESIXTY * (now->tm_hour * 5 + now->tm_min / 12) / 60;
-  int32_t min_angle = THREESIXTY * now->tm_min / 60;
   gpath_rotate_to(hour_path, hour_angle);
   gpath_rotate_to(min_path, min_angle);
   graphics_context_set_fill_color(ctx, FG_COLOR);
   graphics_context_set_stroke_color(ctx, BG_COLOR);
   gpath_draw_filled(ctx, hour_path);
   gpath_draw_outline(ctx, hour_path);
-  graphics_draw_circle(ctx, center, DOTS_SIZE+4);
+  graphics_fill_circle(ctx, hour_pos, DOTS_SIZE+3);
   gpath_draw_filled(ctx, min_path);
   gpath_draw_outline(ctx, min_path);
-  graphics_fill_circle(ctx, center, DOTS_SIZE+3);
+  graphics_fill_circle(ctx, min_pos, DOTS_SIZE+3);
 
   // seconds
   if (!hide_seconds) {
-    int32_t sec_angle = THREESIXTY * now->tm_sec / 60;
-    GPoint sec_pos = GPoint(
-      CENTER_X + SEC_RADIUS * sin_lookup(sec_angle) / ONE,
-      CENTER_Y - SEC_RADIUS * cos_lookup(sec_angle) / ONE);
+    GPoint sec_end = GPoint(
+      sec_pos.x + SEC_RADIUS * sin_lookup(sec_angle) / ONE,
+      sec_pos.y - SEC_RADIUS * cos_lookup(sec_angle) / ONE);
     graphics_context_set_fill_color(ctx, BG_COLOR);
     gpath_rotate_to(sec_path, sec_angle);
     gpath_draw_filled(ctx, sec_path);
     graphics_context_set_stroke_color(ctx, FG_COLOR);
     graphics_context_set_compositing_mode(ctx, GCompOpAssignInverted);
-    graphics_draw_line(ctx, center, sec_pos);
+    graphics_draw_line(ctx, sec_pos, sec_end);
   }
 
   // center dot
   graphics_context_set_fill_color(ctx, BG_COLOR);
-  graphics_fill_circle(ctx, center, DOTS_SIZE);
+  graphics_fill_circle(ctx, min_pos, DOTS_SIZE);
 }
 
 void date_layer_update_callback(Layer *layer, GContext* ctx) {
@@ -300,6 +312,58 @@ void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   if (date_pos != DATE_POS_OFF && (now->tm_wday != date_wday || now->tm_mday != date_mday))
     layer_mark_dirty(date_layer);
 }
+
+void handle_app_did_focus(bool in_focus) {
+  if (in_focus && startup_animation) {
+    animation_schedule(startup_animation);
+    startup_animation = NULL;
+  }
+}
+
+void startup_animation_init() {
+  update_angles();
+  hour_delta = GPoint(
+    DOTS_RADIUS * sin_lookup(hour_angle) / ONE,
+    -DOTS_RADIUS * cos_lookup(hour_angle) / ONE);
+  gpath_move_to(hour_path, GPoint(CENTER_X + hour_delta.x, CENTER_Y + hour_delta.y));
+  min_delta = GPoint(
+    DOTS_RADIUS * sin_lookup(min_angle) / ONE,
+    -DOTS_RADIUS * cos_lookup(min_angle) / ONE);
+  gpath_move_to(min_path, GPoint(CENTER_X + min_delta.x, CENTER_Y + min_delta.y));
+  sec_delta = GPoint(
+    DOTS_RADIUS * sin_lookup(sec_angle) / ONE,
+    -DOTS_RADIUS * cos_lookup(sec_angle) / ONE);
+  gpath_move_to(sec_path, GPoint(CENTER_X + sec_delta.x, CENTER_Y + sec_delta.y));
+}
+
+void startup_animation_update(Animation *animation, const AnimationProgress progress) {
+  dots_radius = DOTS_RADIUS * progress / ANIMATION_NORMALIZED_MAX;
+  AnimationProgress reverse = ANIMATION_NORMALIZED_MAX - progress;
+  hour_pos = GPoint(
+    CENTER_X + hour_delta.x * reverse / ANIMATION_NORMALIZED_MAX, 
+    CENTER_Y + hour_delta.y * reverse / ANIMATION_NORMALIZED_MAX);
+  gpath_move_to(hour_path, hour_pos);
+  min_pos = GPoint(
+    CENTER_X + min_delta.x * reverse / ANIMATION_NORMALIZED_MAX, 
+    CENTER_Y + min_delta.y * reverse / ANIMATION_NORMALIZED_MAX);
+  gpath_move_to(min_path, min_pos);
+  sec_pos = GPoint(
+    CENTER_X + sec_delta.x * reverse / ANIMATION_NORMALIZED_MAX, 
+    CENTER_Y + sec_delta.y * reverse / ANIMATION_NORMALIZED_MAX);
+  gpath_move_to(sec_path, sec_pos);
+  layer_mark_dirty(background_layer);
+  layer_mark_dirty(hands_layer);
+}
+
+void startup_animation_teardown(Animation *animation) {
+  startup_animation_update(animation, ANIMATION_NORMALIZED_MAX);
+  animation_destroy(animation);
+}
+
+static AnimationImplementation startup_animation_implementation = {
+  .update = startup_animation_update,
+  .teardown = startup_animation_teardown
+};
 
 void lost_connection_warning(void *);
 
@@ -465,6 +529,14 @@ void handle_init() {
   battery_path = gpath_create(&BATTERY_POINTS);
   charge_path = gpath_create(&CHARGE_POINTS);
 
+  startup_animation = animation_create();
+  animation_set_curve(startup_animation, AnimationCurveEaseOut);
+  animation_set_implementation(startup_animation, &startup_animation_implementation);
+  startup_animation_init();
+  app_focus_service_subscribe_handlers((AppFocusHandlers){
+    .did_focus = handle_app_did_focus,
+  });
+
   font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_30));
 
   has_config = true;
@@ -476,8 +548,8 @@ void handle_init() {
   if (persist_exists(GRAPHICS_MODE)) graphics_mode = persist_read_int(GRAPHICS_MODE); else has_config = false;
   if (persist_exists(CONNLOST_MODE)) connlost_mode = persist_read_int(CONNLOST_MODE); else has_config = false;
   if (has_config) APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded config");
-  handle_layout();
   tick_timer_service_subscribe(hide_seconds ? MINUTE_UNIT : SECOND_UNIT, &handle_tick);
+  handle_layout();
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   handle_bluetooth(bluetooth_connection_service_peek());
@@ -503,6 +575,8 @@ void handle_deinit() {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Did not write config");
   }
   fonts_unload_custom_font(font);
+  app_focus_service_unsubscribe();
+  animation_unschedule_all();
   gpath_destroy(charge_path);
   gpath_destroy(battery_path);
   gpath_destroy(sec_path);
